@@ -1,2 +1,5 @@
 /vrtest/*
 /handson-ml/*
+/training_images/*
+/pose_basic_train/*
+/classifier.h5
