@@ -3,3 +3,6 @@
 /training_images/*
 /pose_basic_train/*
 /classifier.h5
+
+/.DS_Store
+/.ipynb_checkpoints/
