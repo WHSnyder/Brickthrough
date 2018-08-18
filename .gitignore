@@ -1,6 +1,8 @@
 /vrtest/*
 /handson-ml/*
 /training_images/*
+/train_exact_models/*
+/regtest/*
 /pose_basic_train/*
 /classifier.h5
 
