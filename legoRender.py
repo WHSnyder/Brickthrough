@@ -49,7 +49,7 @@ for piece in objects:
     
 random.seed()
 
-for x in range(2):
+for x in range(25000):
     
     i = random.randint(0,1)
     
@@ -63,12 +63,12 @@ for x in range(2):
             objects[y].location = (1000000,1000000,1000000)
     
     angle = random.randint(0, 180)
-    piece.rotation_euler.rotate_axis("Z", math.radians(angle))
+    piece.rotation_euler = (0.0,0.0,math.radians(angle))
     
     objects[i].location = (random.randint(0,3), random.randint(0,3), random.randint(0,2)) 
     
     
-    camera.location = (random.randint(4,15), random.randint(4,15,), random.randint(4,20))
+    camera.location = (random.randint(4,11), random.randint(4,11), random.randint(4,10))
     
     
     
