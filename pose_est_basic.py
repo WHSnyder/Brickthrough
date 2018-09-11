@@ -3,7 +3,7 @@ import random
 import math
 import time
 
-
+from math import degrees
 
 millis = lambda: int(round(time.time() * 1000))
 
@@ -18,7 +18,7 @@ wing = bpy.data.objects['Wing']
 
 camera = bpy.data.objects['Camera']
 
-objects = [pole, brick, wing]
+objects = [pole, wing]#[pole, brick, wing]
 
 mat = bpy.data.materials.new(name="Testmat")
 
@@ -45,27 +45,27 @@ for piece in objects:
     
     
 
-for x in range(20000):
+for x in range(10000):
     
-    piece = objects[0]
+    piece = objects[1]
     
     angle = random.randint(0, 180)
-    piece.rotation_euler.rotate_axis("Z", math.radians(angle))
+    piece.rotation_euler = (0,0,math.radians(angle))
     
     piece.location = (0, 0, 0) 
     
     
-    camera.location = (0, 0, random.randint(10,30))
+    camera.location = (0, 0, 10)
     
     scene.render.resolution_x = 128
     scene.render.resolution_y = 128
     scene.render.resolution_percentage = 100
             
-    scene.render.image_settings.file_format = 'JPEG'
+    scene.render.image_settings.file_format = 'PNG'
     scene.render.filepath = "/Users/will/projects/legoproj/pose_basic_train/test" + str(x) + ".png"
     bpy.ops.render.render(write_still = 1)
     
-    labels += (str(x) + " " + str(piece.rotation_euler.z) + "\n")
+    labels += (str(x) + " " + str(degrees(piece.rotation_euler[2])) + "\n")
 
 
 print("Generated " + str(x+1) + " images in " + str(float(millis() - timestart)/1000.0) + " seconds") 
