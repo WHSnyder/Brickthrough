@@ -106,7 +106,7 @@ testlabels = labels[split:]
 
 model.compile(optimizer='adam', loss='mse', metrics=['mse','mae'])
 
-history = model.fit(trainset, trainlabels, epochs=1, batch_size=200,  verbose=1, validation_split=0.1)
+history = model.fit(trainset, trainlabels, epochs=125, batch_size=200,  verbose=1, validation_split=0.1)
 
 #model.fit(trainset, trainlabels, verbose=1, epochs=2)
 
