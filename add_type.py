@@ -9,6 +9,7 @@ import random
 import sys
 import time
 import copy
+import json
 
 
 root = "./piecetypes/"
@@ -23,6 +24,8 @@ parser.add_argument('-n', '--name', dest='name',
 parser.add_argument('-s', '--symmetry', dest='sym',
                   required=False,
                   help='Is this category symmetric?')
+
+parser.add_argument('-c', '--color', type=float, dest="color", nargs=3, required=False, help="Type color?")
 
 '''
 argv = sys.argv[sys.argv.index('--') + 1:]
@@ -45,3 +48,20 @@ os.mkdir(records_path)
 os.mkdir(model_path)
 os.mkdir(output_path)
 os.mkdir(pieces_path)
+
+
+
+# a Python object (dict):
+attrs = {
+    "color": (random.randrange(0,1,.05), random.randrange(0,1,.05), random.randrange(0,1,.05))
+}
+
+if (args.color):
+	attrs["color"] = (color[0],color[1],color[2])
+
+attrs_json = json.dumps(x)
+
+os.system("echo \'{}\' > {}attrs.txt".format(attrs_json, path))
+
+
+
