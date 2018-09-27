@@ -23,4 +23,8 @@ bpy.data.objects['Torus'].select = False
 bpy.data.objects['Lamp'].select = False
 bpy.data.objects['Camera'].select = False
 
-bpy.ops.export_scene.obj(filepath=obj_out, axis_forward='-Z', axis_up='Y', use_selection=True)
+cur_obj = bpy.context.selected_objects[0]
+
+cur_obj.scale = (0.077,0.077,0.077)
+
+bpy.ops.export_scene.obj(filepath=obj_out, axis_forward='-Z', axis_up='Y', use_selection=True, write_materials=True)

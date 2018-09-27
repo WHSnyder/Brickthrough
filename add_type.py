@@ -61,7 +61,7 @@ if (args.color):
 
 attrs_json = json.dumps(x)
 
-os.system("echo \'{}\' > {}attrs.txt".format(attrs_json, path))
+os.system("echo \'{}\' > {}attrs.json".format(attrs_json, path))
 
 
 
