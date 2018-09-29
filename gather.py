@@ -53,15 +53,17 @@ parser.add_argument('-c', '--cat', dest='cat',
 parser.add_argument('-t', '--tag', dest='tag', required=True)
 
 
-parser.add_argument("--train", dest="train", required=False, action='store_true')
+parser.add_argument("--dev", dest="dev", required=False, action='store_true')
 parser.add_argument("--test", dest="test", required=False, action='store_true')
+parser.add_argument("--train", dest="train", required=False, action='store_true')
+
 
 
 args = parser.parse_args()
 
 paths = [];
 
-if (not args.train and not args.test):
+if (not args.train and not args.test and not args.dev):
 	print("Train or test?")
 	sys.exit()
 
@@ -113,18 +115,16 @@ for record_path in paths:
 	writestring = writestring + (piece_name + args.tag) + "\n"
 
 
-	print("Source path: " + record_path)
-	print("Output path: " + out_path)# + (piece_name + tail.replace("/","")).replace(".tfrecord",""))
+	#print("Source path: " + record_path)
+	#print("Output path: " + out_path)# + (piece_name + tail.replace("/","")).replace(".tfrecord",""))
 	
 	os.system("cp {} {}".format(record_path, out_path))
 
 
 dest = "test"
-if args.train:
+if args.dev:
 	dest = "dev"
 
-cmd = "echo \'{}\' > {}{}.txt".format(writestring[0:-1],output_path, dest)
-
-#print(cmd)
-
-os.system(cmd)
+if not args.train:
+	cmd = "echo \'{}\' > {}{}.txt".format(writestring[0:-1],output_path, dest)
+	os.system(cmd)
