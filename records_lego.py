@@ -53,9 +53,9 @@ parser.add_argument('-f', '--folder', dest='folder', nargs='*',
                   required=False, 
                   help='Obj file path?')
 
-parser.add_argument('-p', '--piece', dest='piece', nargs='*',
+parser.add_argument('-c', '--piece', dest='piece', nargs='*',
 				  required=False,
-				  help='Piece code?')
+				  help='Category?')
 
 parser.add_argument('-t', '--tag', dest='tag', required=True)
 

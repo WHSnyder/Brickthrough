@@ -45,7 +45,7 @@ def getPiecesOfCategory(category):
 
 
 
-command = '{} -b --python {} -- -m {} -o {} -s 256 -n {} -fov 5 -c {} {} {} --roll'
+command = '{} -b --python {} -- -m {} -o {} -s 128 -n {} -fov 5 -c {} {} {} --roll'
 
 
 parser = argparse.ArgumentParser()
@@ -54,7 +54,7 @@ parser.add_argument('-f', '--file', dest='file', nargs='*',
                   required=False, 
                   help='Obj file path?')
 
-parser.add_argument('-p', '--piece', dest='piece', nargs='*',
+parser.add_argument('-c', '--cat', dest='piece', nargs='*',
 				  required=False,
 				  help='Piece code?')
 
