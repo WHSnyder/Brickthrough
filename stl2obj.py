@@ -1,5 +1,4 @@
 '''
-
 Credits to Anna Sirota.
 
 '''
@@ -17,6 +16,8 @@ r = float(argv[2])
 g = float(argv[3])
 b = float(argv[4])
 
+scale = float(argv[5])
+
 
 bpy.ops.import_mesh.stl(filepath=stl_in, axis_forward='-Z', axis_up='Y')
 
@@ -28,7 +29,11 @@ bpy.data.objects['Lamp'].select = False
 bpy.data.objects['Camera'].select = False
 
 cur_obj = bpy.context.selected_objects[0]
-cur_obj.scale = (0.03,0.03,0.03)
+bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY')#type='ORIGIN_CURSOR')
+bpy.ops.object.location_clear()
+#cur_obj.origin_set(type='ORIGIN_GEOMETRY')
+#cur_obj.location_clear()
+cur_obj.scale = (scale,scale,scale)
 
 mat = bpy.data.materials.new(name="Mat") #set new material to variable
 cur_obj.data.materials.append(mat) #add the material to the object

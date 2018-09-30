@@ -25,7 +25,7 @@ parser.add_argument('-s', '--symmetry', dest='sym',
                   required=False,
                   help='Is this category symmetric?')
 
-parser.add_argument('-c', '--color', type=float, dest="color", nargs=3, required=False, help="Type color?")
+parser.add_argument('-c', '--color', type=float, dest="color", nargs=3, required=True, help="Type color?")
 
 '''
 argv = sys.argv[sys.argv.index('--') + 1:]
@@ -49,17 +49,17 @@ os.mkdir(model_path)
 os.mkdir(output_path)
 os.mkdir(pieces_path)
 
-
+color = args.color
 
 # a Python object (dict):
 attrs = {
-    "color": (random.randrange(0,1,.05), random.randrange(0,1,.05), random.randrange(0,1,.05))
+    "color": (0.0,0.0,0.0)
 }
 
 if (args.color):
 	attrs["color"] = (color[0],color[1],color[2])
 
-attrs_json = json.dumps(x)
+attrs_json = json.dumps(attrs)
 
 os.system("echo \'{}\' > {}attrs.json".format(attrs_json, path))
 

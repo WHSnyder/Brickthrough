@@ -105,14 +105,15 @@ for obj_path in paths:
 
 	output_dir = piece_dir + "renders" + args.tag
 
-	if os.path.exists(output_dir):
+	if not os.path.exists(output_dir):
+		os.mkdir(output_dir)
 		print("Tag already used...")
-		sys.exit()
+		#sys.exit()
 
 
 	color = getCategoryColor(category)
-	print(color)
+	#print(color)
 
 
-	os.mkdir(output_dir)
+	
 	os.system(command.format(blend, render_script, obj_path, output_dir, args.num, color[0], color[1], color[2]))
