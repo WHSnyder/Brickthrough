@@ -67,4 +67,4 @@ for source_path in args.file:
 	if not os.path.exists(dest_root + name_dims):
 		os.mkdir(dest_root + name_dims)
 
-	os.system("{} --background --python stl2obj.py -- {} {} {} {} {} {}".format(blend, source_path, dest_obj_path,r,g,b,str(0.03)))
+	os.system("{} --background --python stl2obj.py -- {} {} {} {} {} {}".format(blend, source_path, dest_obj_path,r,g,b,str(0.0)))
