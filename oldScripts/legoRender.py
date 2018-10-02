@@ -23,6 +23,11 @@ camera = bpy.data.objects['Camera']
 
 objects = [pole, wing]#[pole, brick, wing]
 
+
+
+
+
+
 mat = bpy.data.materials.new(name="Testmat")
 
 
@@ -32,6 +37,9 @@ b = 1.0#random.randrange(0, 10, 2)/10.0;
     
 mat.diffuse_color = (r,g,b)
 
+
+gray = bpy.data.materials.new(name="Gray")
+gray.diffuse_color = (.5,.5,.5)
 
 
 
