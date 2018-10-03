@@ -3,8 +3,23 @@ import json
 import re
 import math
 
+
+
 expr = re.compile("([-]?[0-9]*\.[0-9]{4})")
 dim = 512
+
+
+
+def dictFromJson(filename):
+
+    data = {}
+
+    with open(filename) as json_file:
+        data = json.load(json_file)
+
+    return data
+
+
 
 def matrix_from_string(matstring):
 
@@ -19,10 +34,7 @@ def matrix_from_string(matstring):
 
 def get_object_matrices(filename):
 
-    data = {}
-
-    with open(filename) as json_file:
-        data = json.load(json_file)
+    data = dictFromJson(filename)
 
     for key in data:
         data[key] = matrix_from_string(data[key])
@@ -37,10 +49,7 @@ def get_object_studs(piece):
     piece = piece.split("_")[0]
     file = "/Users/will/projects/legoproj/pieces/{}.json".format(piece)
     
-    with open(file) as json_file:
-        data = json.load(json_file)
-
-    return data["studs"]
+    return dictFromJson(file)["studs"]
 
 
 
@@ -95,6 +104,7 @@ def getStudMask(i):
     return scenestuds
 
 
+
 def toNDC(verts, dims):
     newverts = []
     for vert in verts:
@@ -125,3 +135,26 @@ def getCalibCorrs():
     screenverts = toNDC(verts_to_screen(model, view, proj, verts), (512,512))
 
     return np.delete(verts, 3, axis=1), screenverts
+
+
+
+def getFeatureBoxes(width, height, centers):
+
+	out = []
+
+	for center in centers:
+		x = center[1]
+		y = center[0]
+
+		x -= width/2
+		y -= height/2
+
+		out.append(tuple(np.int(np.asarray([x,y,width,height]))))
+
+	return out
+
+
+
+
+
+
