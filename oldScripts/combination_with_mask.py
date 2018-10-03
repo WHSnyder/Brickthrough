@@ -23,6 +23,8 @@ millis = lambda: int(round(time.time() * 1000))
 timestart = millis()
 
 scene = bpy.context.scene
+scene_objs = bpy.data.objects
+
 
 black = bpy.data.materials.new(name="Black")
 black.diffuse_color = (.1,.1,.1)
@@ -31,14 +33,14 @@ gray = bpy.data.materials.new(name="Gray")
 gray.diffuse_color = (.5,.5,.5)
 
 lgray = bpy.data.materials.new(name="LightGray")
-lgray.diffuse_color = (.7,.7,.7)
+lgray.diffuse_color = (.8,.8,.8)
 
 blue = bpy.data.materials.new(name="Blue")
 blue.diffuse_color = (0.0,0.0,1.0)
 
 maskmats = []
 for x in range(0,10):
-    m = (10-x)/20 + .5
+    m = x/10 + .5
     mask = bpy.data.materials.new(name="White" + str(10 - x))
     mask.diffuse_color = (m,m,m)
     mask.use_shadeless = True
@@ -49,20 +51,23 @@ black_shadeless = bpy.data.materials.new(name="BlackShadeless")
 black_shadeless.diffuse_color = (0.0,0.0,0.0)
 black_shadeless.use_shadeless = True
 
-pole = bpy.data.objects['Pole']
+#pole = scene.data.objects['Pole']
+pole = scene_objs['Pole']
 pole.data.materials.append(black)
-#pole.data.materials[0] = black 
-pole.active_material = black
+pole.data.materials[0] = black 
+#pole.active_material = black
 
-brick = bpy.data.objects['Brick']
+#brick = bpy.data.objects['Brick']
+brick = scene_objs['Brick']
 brick.data.materials.append(gray)
-#brick.data.materials[0] = gray
-pole.active_material = gray 
+brick.data.materials[0] = gray
+#pole.active_material = gray 
 
-wing = bpy.data.objects['Wing'] 
+#wing = bpy.data.objects['Wing']
+wing = scene_objs['Wing']
 wing.data.materials.append(lgray)
-#wing.data.materials[0] = lgray
-wing.active_material = lgray
+wing.data.materials[0] = lgray
+#wing.active_material = lgray
 
 camera = bpy.data.objects['Camera']
 
@@ -83,6 +88,15 @@ def add2tup(tup, num):
 
 def addtups(tup1, tup2):
     return tuple(x + y for x,y in zip(tup1,tup2))
+
+def objcopy(obj):
+    newObj = obj.copy()
+    newObj.data = obj.data.copy()
+    scene.objects.link(newObj)
+    return newObj
+
+
+
 '''
 Rendering/masking methods
 '''
@@ -93,25 +107,27 @@ def shadeMasks(objects, mask_name, x):
         for key in objects:
             for obj in objects[key]:
                 if key != mask_name:
-                    obj.hide = True
+                    mat = black_shadeless
                 else:
-                    curmask = maskmats[count]
-                    obj.hide = False
-                    obj.data.materials.append(curmask)
-                    obj.active_material = curmask
+                    mat = maskmats[count]
                     count = count + 1
+
+                obj.hide = False
+                obj.data.materials.append(mat)
+                obj.active_material = mat
+                obj.data.materials[0] = mat
 
         #scene.render.setBackgroundColor(0.0,0.0,0.0)
         bck.active_material = black_shadeless
+        bck.data.materials[0] = black_shadeless
 
         scene.render.resolution_x = 64
         scene.render.resolution_y = 64
         scene.render.resolution_percentage = 100
                 
         scene.render.image_settings.file_format = 'PNG'
-        scene.render.filepath = write_path + mask_name + str(x) + ".png"
+        scene.render.filepath = write_path + str(x) + mask_name + ".png"
         bpy.ops.render.render(write_still = 1)
-
 
 
 
@@ -131,26 +147,30 @@ def genPiece(center):
     #if (switch == 0):
     #    return '',None
     if gimme():
-        obj =  pole.copy()
+        obj = objcopy(pole)# pole.duplicate()
         mult = random.randint(-1,1)
         obj.location = addtups( center , tuple(mult * x for x in posm) )
         pt = 90 if mult <= 0 else -90
         pt = pt + .7 * mult * 50
         obj.rotation_euler = (0,0, math.radians(pt))
+        print("Generating pole")
         return 'Pole',obj
     else:
-        obj = brick.copy()
+        obj = objcopy(brick)# brick.duplicate()
         pt = random.randint(0,20)/20
         obj.rotation_euler = (0,0,pt * PI)
         obj.location = addtups( center , mltup(posm,.6) )
+        print("Generating brick")
         return 'Brick',obj
 
 
 
 def genWing(center):
+
+    print("Generating wing")
     
-    if gimme():
-        newWing = wing.copy()
+    if gimme() or gimme():
+        newWing = objcopy(wing)# wing.copy()
         newWing.location = (0,0,0)
         newWing.rotation_euler = (0,0,0)
         objs["Wing"].append(newWing)
@@ -171,39 +191,45 @@ def genWing(center):
         objs[l].append(o)
         o.parent = center
 
-c1 = bpy.data.objects[].new("empty", None)
+
+
+c1 = bpy.data.objects.new("empty", None)
 bpy.context.scene.objects.link(c1)
 
-c2 = bpy.data.objects[]new("empty", None)
+c2 = bpy.data.objects.new("empty", None)
 bpy.context.scene.objects.link(c2)
 
-for x in range(images):
+print(bck)
+
+for x in range(10):
 
     c1.location = (0,0,0)
     c2.location = (0,0,0)
 
     if gimme():
         w1 = genWing(c1)
-        if gimme():
-            w2 = genWing(c2)
-            c2.location = (2 * random.randint(-1,1), 3 + random.randint(-1,1), 0)
-            c2.rotation_euler = (0,0,PI/2*random.randint(-18,18)/18)
-
         c1.location = (2 * random.randint(-1,1), -3 + random.randint(-1,1), 0)
         c1.rotation_euler = (0,0,PI/2*random.randint(-18,18)/18)
+
+
+        w2 = genWing(c2)
+        c2.location = (2 * random.randint(-1,1), 3 + random.randint(-1,1), 0)
+        c2.rotation_euler = (0,0,PI/2*random.randint(-18,18)/18)        
     else:
         w2 = genWing(c2)
         c2.location = (3 * random.randint(-1,1), 3 + random.randint(-1,1), 0)
         c2.rotation_euler = (0,0,PI/2*random.randint(-18,18)/18)
 
-    camera.location = (random.randint(4,11), random.randint(4,11), random.randint(4,10))
+    camera.location = (random.randint(10,11) * -1 if random.randint(0,1) < 1 else 1, random.randint(10,11) * -1 if random.randint(0,1) < 1 else 1, random.randint(12,15))
 
-    scene.render.resolution_x = 256
-    scene.render.resolution_y = 256
+    scene.render.resolution_x = 512
+    scene.render.resolution_y = 512
     scene.render.resolution_percentage = 100
 
     #scene.render.setBackgroundColor(1.0,1.0,1.0)
-    bck.active_material = maskmats[0]
+    bck.active_material = maskmats[9]
+    bck.data.materials[0] = maskmats[9]
+
             
     scene.render.image_settings.file_format = 'PNG'
     scene.render.filepath = write_path + str(x) + ".png"
@@ -212,10 +238,16 @@ for x in range(images):
     for key in objs:
         if key != "":
             shadeMasks(objs, key, x)
+            for obj in objs[key]:
+                print("wiping")
+                scene_objs.remove(obj, do_unlink=True)
             objs[key].clear()
 
 
-print("Generated " + str(x+1) + " images in " + str(float(millis() - timestart)/1000.0) + " seconds") 
+print("Generated " + str(x+1) + " images in " + str(float(millis() - timestart)/1000.0) + " seconds")
+scene_objs.remove(c1, do_unlink=True)
+scene_objs.remove(c2, do_unlink=True)
+ 
 
 '''
 text_file = open("/Users/will/projects/legoproj/regtest/labels.txt", "w")
