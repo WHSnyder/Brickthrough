@@ -10,7 +10,7 @@ from math import degrees
 
 
 
-write_path = "/Users/will/projects/legoproj/training/test"
+write_path = "/Users/will/projects/legoproj/test_oneofeach/test"
 
 
 PI = 3.1415
@@ -142,7 +142,7 @@ Wing generation and children placement
 def gimme():
     return False if random.randint(0,2) == 0 else True
 
-def genPiece(center):
+def genPiece(center, b):
 
     switch = random.randint(0,2)
     posm = (.7, .2, 0)
@@ -150,7 +150,7 @@ def genPiece(center):
 
     #if (switch == 0):
     #    return '',None
-    if gimme():
+    if not b:
         obj = objcopy(pole)# pole.duplicate()
         mult = random.randint(-1,1)
         obj.location = addtups( center , tuple(mult * x for x in posm) )
@@ -172,6 +172,7 @@ def genPiece(center):
 def genWing(center):
 
     print("Generating wing")
+    b = False
     
     if gimme() or gimme():
         newWing = objcopy(wing)# wing.copy()
@@ -180,20 +181,22 @@ def genWing(center):
         objs["Wing"].append(newWing)
         newWing.parent = center       
     ###region 1
-    if gimme():
-        l, o = genPiece((0,2.6,.7))
-        objs[l].append(o)
-        o.parent = center
-    ###region 2
+    b = gimme()
+    #if gimme():
+    l, o = genPiece((0,2.6,.7),b)
+    objs[l].append(o)
+    o.parent = center
+    '''###region 2
     if gimme():
         l, o = genPiece((0,-1,.7))
         objs[l].append(o)
         o.parent = center
+        '''
     ###region 3
-    if gimme():
-        l, o = genPiece((-.9,-2.3,.7))
-        objs[l].append(o)
-        o.parent = center
+    #if gimme():
+    l, o = genPiece((-.9,-2.3,.7), not b)
+    objs[l].append(o)
+    o.parent = center
 
 
 
@@ -203,9 +206,9 @@ bpy.context.scene.objects.link(c1)
 c2 = bpy.data.objects.new("empty", None)
 bpy.context.scene.objects.link(c2)
 
-print(bck)
+#print(bck)
 
-for x in range(1000):
+for x in range(50):
 
     c1.location = (0,0,0)
     c2.location = (0,0,0)
@@ -218,10 +221,11 @@ for x in range(1000):
 
         w2 = genWing(c2)
         c2.location = (2 * random.randint(-1,1), 2, 0)
-        c2.rotation_euler = (0,0,PI/2*random.randint(-18,18)/18)        
-    else:'''
+        c2.rotation_euler = (0,0,PI/2*random.randint(-18,18)/18) 
+    '''       
+    #else:
     w2 = genWing(c2)
-    c2.location = (2 * random.randint(-1,1), 2 * random.randint(-1,1), 0)
+    c2.location = (random.randint(-1,1), random.randint(-1,1), 0)
     c2.rotation_euler = (0,0,PI/2*random.randint(-18,18)/18)
 
     camera.location = (random.randint(10,11) * -1 if random.randint(0,1) < 1 else 1, random.randint(10,11) * -1 if random.randint(0,1) < 1 else 1, random.randint(9,15))
