@@ -9,8 +9,9 @@ from math import degrees
 
 
 
+mode = "test"
+write_path = "/Users/will/projects/legoproj/data_oneofeach/{}_oneofeach/".format(mode)
 
-write_path = "/Users/will/projects/legoproj/test_oneofeach/test"
 
 
 PI = 3.1415
@@ -130,7 +131,7 @@ def shadeMasks(objects, mask_name, x):
         scene.render.resolution_percentage = 100
                 
         scene.render.image_settings.file_format = 'PNG'
-        scene.render.filepath = write_path + str(x) + mask_name + ".png"
+        scene.render.filepath = write_path + str(x) + "_{}_".format(mode) + mask_name + ".png"
         bpy.ops.render.render(write_still = 1)
 
 
@@ -240,7 +241,7 @@ for x in range(50):
 
             
     scene.render.image_settings.file_format = 'PNG'
-    scene.render.filepath = write_path + str(x) + ".png"
+    scene.render.filepath = write_path + str(x) + "_{}_a.png".format(mode)
     bpy.ops.render.render(write_still = 1)
 
     for key in objs:
