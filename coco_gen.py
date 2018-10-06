@@ -8,9 +8,34 @@ import fnmatch
 from PIL import Image
 import numpy as np
 from pycococreatortools import pycococreatortools
+import argparse
+import sys
+
+
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument('-m', '--mode', dest='mode', nargs=1,
+                  required=True, 
+                  help='test, train, or val?')
+args = parser.parse_args()
+
+mode = args.mode
+
+if not (mode == 'test' or mode == 'val' or mode == 'train'):
+	print("Invalid mode supplied...")
+	sys.exit()
+
+
+
+
+
+
+
+
 
 ROOT_DIR = './'
-IMAGE_DIR = os.path.join(ROOT_DIR, "data_oneofeach/test_oneofeach/")
+IMAGE_DIR = os.path.join(ROOT_DIR, "data_oneofeach/{}_oneofeach/".format(mode))
 ANNOTATION_DIR = os.path.join(ROOT_DIR, "annotations")
 
 INFO = {
@@ -48,41 +73,17 @@ CATEGORIES = [
     },
 ]
 
-def filter_for_jpeg(root, files):
-    file_types = ['*.png', '*.png']
-    file_types = r'|'.join([fnmatch.translate(x) for x in file_types])
-    files = [os.path.join(root, f) for f in files]
-    files = [f for f in files if re.match(file_types, f)]
-    
-    return files
-
-def filter_for_annotations(root, files, image_filename):
-    file_types = ['*.png']
-    file_types = r'|'.join([fnmatch.translate(x) for x in file_types])
-    basename_no_extension = os.path.splitext(os.path.basename(image_filename))[0]
-    file_name_prefix = basename_no_extension + '.*'
-    files = [os.path.join(root, f) for f in files]
-    files = [f for f in files if re.match(file_types, f)]
-    files = [f for f in files if re.match(file_name_prefix, os.path.splitext(os.path.basename(f))[0])]
-
-    return files
-
 
 def getAttrs(filename):
-    name = filename.split(".")[0]
-    tail = name.replace("test","")
-    num = ""
-    for c in tail:
-        if c.isnumeric():
-            num += c
-        else:
-            break
-    return num, tail.replace(num,"")
+    parts = filename.split("_")
+    piecetype = parts[2].split(".")[0]
+    num = parts[0]
+    
+    return num, piecetype
 
 
 def getNum(filename):
-    name = filename.split(".")[0]
-    return name.replace("test","")
+    return filename.split("_")[0]
 
 
 def main():

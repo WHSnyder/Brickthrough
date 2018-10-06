@@ -9,7 +9,7 @@ from math import degrees
 
 
 
-mode = "test"
+mode = "train"
 write_path = "/Users/will/projects/legoproj/data_oneofeach/{}_oneofeach/".format(mode)
 
 
@@ -209,7 +209,7 @@ bpy.context.scene.objects.link(c2)
 
 #print(bck)
 
-for x in range(50):
+for x in range(1000):
 
     c1.location = (0,0,0)
     c2.location = (0,0,0)
