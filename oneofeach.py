@@ -9,7 +9,7 @@ from math import degrees
 
 
 
-mode = "train"
+mode = "val"
 write_path = "/Users/will/projects/legoproj/data_oneofeach/{}_oneofeach/".format(mode)
 
 
@@ -209,7 +209,7 @@ bpy.context.scene.objects.link(c2)
 
 #print(bck)
 
-for x in range(1000):
+for x in range(200):
 
     c1.location = (0,0,0)
     c2.location = (0,0,0)
@@ -247,10 +247,11 @@ for x in range(1000):
     for key in objs:
         if key != "":
             shadeMasks(objs, key, x)
-            for obj in objs[key]:
-                print("wiping")
-                scene_objs.remove(obj, do_unlink=True)
-            objs[key].clear()
+    for key in objs:
+        for obj in objs[key]:
+            print("wiping")
+            scene_objs.remove(obj, do_unlink=True)
+        objs[key].clear()
 
 
 print("Generated " + str(x+1) + " images in " + str(float(millis() - timestart)/1000.0) + " seconds")

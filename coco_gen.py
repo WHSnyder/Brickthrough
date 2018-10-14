@@ -15,7 +15,7 @@ import sys
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('-m', '--mode', dest='mode', nargs=1,
+parser.add_argument('-m', '--mode', dest='mode', 
                   required=True, 
                   help='test, train, or val?')
 args = parser.parse_args()
@@ -100,10 +100,10 @@ def main():
     segmentation_id = 1
 
 
-    filelist = sorted(os.listdir(ROOT_DIR + IMAGE_DIR))
+    filelist = sorted(os.listdir(ROOT_DIR + IMAGE_DIR), key=lambda s: s.casefold())
     numfiles = len(filelist)
 
-    print(filelist)
+    #print(filelist)
 
     go = True
 
@@ -123,7 +123,7 @@ def main():
 
         image = Image.open(ROOT_DIR + IMAGE_DIR + curfile)
 
-        image_info = pycococreatortools.create_image_info(j, os.path.basename(ROOT_DIR + IMAGE_DIR + curfile), image.size)
+        image_info = pycococreatortools.create_image_info(i, os.path.basename(ROOT_DIR + IMAGE_DIR + curfile), image.size)
         coco_output["images"].append(image_info)
 
         go = True
@@ -154,7 +154,7 @@ def main():
             binary_mask = np.asarray(Image.open(ROOT_DIR + IMAGE_DIR + nextfile).convert('1')).astype(np.uint8)
             
             annotation_info = pycococreatortools.create_annotation_info(
-                j, i, category_info, binary_mask,
+                j, i-1, category_info, binary_mask,
                 image.size, tolerance=2)
 
             if annotation_info is not None:
@@ -167,7 +167,7 @@ def main():
     print("Loaded {} images, {} annotations...".format(i,j))
 
 
-    with open('{}/test.json'.format(ROOT_DIR), 'w') as output_json_file:
+    with open('{}/{}.json'.format(ROOT_DIR, mode), 'w') as output_json_file:
         json.dump(coco_output, output_json_file)
 
 
