@@ -360,6 +360,14 @@ model.load_weights(model_path, by_name=True)
 
 # Test on a random image
 image_id = random.choice(dataset_test.image_ids)
+
+
+
+
+
+
+
+
 original_image, image_meta, gt_class_id, gt_bbox, gt_mask =\
     modellib.load_image_gt(dataset_test, inf_config, 
                            image_id, use_mini_mask=False)
@@ -373,11 +381,16 @@ log("gt_mask", gt_mask)
 #visualize.display_instances(original_image, gt_bbox, gt_mask, gt_class_id, 
 #                            dataset_test.class_names, figsize=(8, 8))
 
+
+original_image = cv2.imread(dataroot + "ontable.jpeg",1)
+original_image = cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB)
+
+
 results = model.detect([original_image], verbose=1)
 
 r = results[0]
-#visualize.display_instances(original_image, r['rois'], r['masks'], r['class_ids'], 
-#                            dataset_val.class_names, r['scores'], ax=get_ax())
+visualize.display_instances(original_image, r['rois'], r['masks'], r['class_ids'], 
+                            dataset_val.class_names, r['scores'], ax=get_ax())
 #print(r['scores'])
 
 
@@ -395,7 +408,7 @@ for i in range(r['masks'].shape[2]):
             if not b:  
                 newimg[x][y] = [255,255,255]
 
-    cv2.imwrite("region-" + str(i) + ".png", newimg)
+    #cv2.imwrite("region-" + str(i) + ".png", newimg)
 
 print("Written...")
   

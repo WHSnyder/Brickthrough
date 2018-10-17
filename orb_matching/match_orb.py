@@ -28,7 +28,7 @@ def unpickle_keypoints(array):
     return keypoints, np.array(descriptors)
 #end not mine
 
-
+'''
 
 
 img0 = cv2.imread('wing_real.png',0)
@@ -86,3 +86,33 @@ draw_params = dict(matchColor = (0,255,0),
 img3 = cv2.drawMatchesKnn(img0,kp,img1,kp1,matches,None,**draw_params)
 
 plt.imshow(img3,),plt.show()
+'''
+
+
+img1 = cv2.imread('wing_real.png',cv2.IMREAD_GRAYSCALE)          # queryImage
+img2 = cv2.imread('wing2.png',cv2.IMREAD_GRAYSCALE) # trainImage
+
+# Initiate ORB detector
+orb = cv2.ORB_create()
+
+# find the keypoints and descriptors with ORB
+kp1, des1 = orb.detectAndCompute(img1,None)
+kp2, des2 = orb.detectAndCompute(img2,None)
+
+# create BFMatcher object
+bf = cv2.BFMatcher(cv2.NORM_L1, crossCheck=True)
+
+# Match descriptors.
+matches = bf.match(des1,des2)
+
+# Sort them in the order of their distance.
+matches = sorted(matches, key = lambda x:x.distance)
+
+# Draw first 10 matches.
+img3 = cv2.drawMatches(img1,kp1,img2,kp2,matches[:10],None,flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+plt.imshow(img3),plt.show()
+
+
+
+
+
