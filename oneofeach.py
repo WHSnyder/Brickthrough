@@ -9,8 +9,8 @@ from math import degrees
 
 
 
-mode = "val"
-write_path = "/Users/will/projects/legoproj/data_oneofeach/{}_oneofeach/".format(mode)
+mode = "orbtest"
+write_path = "/Users/will/projects/legoproj/orb_matching/"#data_oneofeach/{}_oneofeach/".format(mode)
 
 
 
@@ -175,12 +175,13 @@ def genWing(center):
     print("Generating wing")
     b = False
     
-    if gimme() or gimme():
-        newWing = objcopy(wing)# wing.copy()
-        newWing.location = (0,0,0)
-        newWing.rotation_euler = (0,0,0)
-        objs["Wing"].append(newWing)
-        newWing.parent = center       
+    #if gimme() or gimme():
+    newWing = objcopy(wing)# wing.copy()
+    newWing.location = (0,0,0)
+    newWing.rotation_euler = (0,0,0)
+    objs["Wing"].append(newWing)
+    newWing.parent = center       
+    """
     ###region 1
     b = gimme()
     #if gimme():
@@ -198,6 +199,7 @@ def genWing(center):
     l, o = genPiece((-.9,-2.3,.7), not b)
     objs[l].append(o)
     o.parent = center
+    """
 
 
 
@@ -209,7 +211,7 @@ bpy.context.scene.objects.link(c2)
 
 #print(bck)
 
-for x in range(200):
+for x in range(1):
 
     c1.location = (0,0,0)
     c2.location = (0,0,0)
@@ -226,7 +228,7 @@ for x in range(200):
     '''       
     #else:
     w2 = genWing(c2)
-    c2.location = (random.randint(-1,1), random.randint(-1,1), 0)
+    #c2.location = (random.randint(-1,1), random.randint(-1,1), 0)
     c2.rotation_euler = (0,0,PI/2*random.randint(-18,18)/18)
 
     camera.location = (random.randint(10,11) * -1 if random.randint(0,1) < 1 else 1, random.randint(10,11) * -1 if random.randint(0,1) < 1 else 1, random.randint(9,15))

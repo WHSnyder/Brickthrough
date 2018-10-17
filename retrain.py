@@ -14,6 +14,9 @@ import matplotlib.patches as patches
 import matplotlib.lines as lines
 from matplotlib.patches import Polygon
 
+import cv2
+
+
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 root = "./"
@@ -75,8 +78,9 @@ class PiecesConfig(Config):
 
     # Aim to allow ROI sampling to pick 33% positive ROIs.
     TRAIN_ROIS_PER_IMAGE = 20
-    
-    MASK_SHAPE = [28,28]
+        
+    MASK_POOL_SIZE = 32
+    MASK_SHAPE = [64, 64]
 
     # set number of epoch
     STEPS_PER_EPOCH = 100
@@ -372,14 +376,29 @@ log("gt_mask", gt_mask)
 results = model.detect([original_image], verbose=1)
 
 r = results[0]
-visualize.display_instances(original_image, r['rois'], r['masks'], r['class_ids'], 
-                            dataset_val.class_names, r['scores'], ax=get_ax())
+#visualize.display_instances(original_image, r['rois'], r['masks'], r['class_ids'], 
+#                            dataset_val.class_names, r['scores'], ax=get_ax())
 #print(r['scores'])
 
 
 
 
+print("Writing...")
+for i in range(r['masks'].shape[2]):
+    mmask = r['masks'][:,:,i]
+    newimg = np.zeros((512, 512,3))
 
+    for y in range(512):
+        for x in range(512):
+            b = mmask[x][y]
+            newimg[x][y] = (original_image[x][y])
+            if not b:  
+                newimg[x][y] = [255,255,255]
+
+    cv2.imwrite("region-" + str(i) + ".png", newimg)
+
+print("Written...")
+  
 
 
 
