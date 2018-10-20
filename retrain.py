@@ -382,8 +382,8 @@ log("gt_mask", gt_mask)
 #                            dataset_test.class_names, figsize=(8, 8))
 
 
-original_image = cv2.imread(dataroot + "ontable.jpeg",1)
-original_image = cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB)
+#original_image = cv2.imread(dataroot + "ontable.jpeg",1)
+#original_image = cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB)
 
 
 results = model.detect([original_image], verbose=1)
