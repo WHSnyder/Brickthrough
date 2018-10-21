@@ -192,7 +192,7 @@ for pt in studpts:
     pt.hide = True
 
 
-for x in range(50):
+for x in range(2000):
     for pt in studpts:
         pt.hide = True
         pt.hide_render = True
@@ -203,8 +203,8 @@ for x in range(50):
 
     camera.location = (random.randint(3,6) * -1 if random.randint(0,1) < 1 else 1, random.randint(3,6) * -1 if random.randint(0,1) < 1 else 1, random.randint(3,6))
 
-    scene.render.resolution_x = 512
-    scene.render.resolution_y = 512
+    scene.render.resolution_x = 256
+    scene.render.resolution_y = 256
     scene.render.resolution_percentage = 100
 
     bck.active_material = white_shadeless
@@ -214,11 +214,11 @@ for x in range(50):
     pole.hide_render = False
             
     scene.render.image_settings.file_format = 'PNG'
-    scene.render.filepath = write_path + str(x + 1050) + "pole.png"
+    scene.render.filepath = write_path + str(x) + "pole.png"
     bpy.ops.render.render(write_still = 1)
 
-    scene.render.resolution_x = 64
-    scene.render.resolution_y = 64
+    scene.render.resolution_x = 32
+    scene.render.resolution_y = 32
     scene.render.resolution_percentage = 100
 
     pole.hide = True
@@ -232,7 +232,7 @@ for x in range(50):
     bck.data.materials[0] = black_shadeless
 
     scene.render.image_settings.file_format = 'PNG'
-    scene.render.filepath = write_path + str(x + 1050) + "pts.png"
+    scene.render.filepath = write_path + str(x) + "pts.png"
     bpy.ops.render.render(write_still = 1)
 
 print("Generated " + str(x+1) + " images in " + str(float(millis() - timestart)/1000.0) + " seconds")

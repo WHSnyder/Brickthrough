@@ -16,34 +16,8 @@ from PIL import Image
 
 import os
 import sys
-
-
-
-os.environ['KMP_DUPLICATE_LIB_OK']='True'
-
-#split = int(sys.argv[1])
-
-datasize = 1500
-
-training_images = []
-points_images = []
-
-for i in range(0,datasize):
-    img = np.array(Image.open("./kps/" + str(i) +"pole.png").convert(mode="L"))
-    pts = np.array(Image.open("./kps/" + str(i) +"pts.png").convert(mode="L"))
-    pts = np.reshape(pts, (4096,)) 
-    
-    training_images.append(img)
-    points_images.append(pts)
-    
-print(training_images[100].shape)
-print(points_images[100].shape)
-
-
-
-imgsarr = np.array(training_images)
-ptsarr = np.array(points_images)
-
+import argparse
+import random
 
 import tensorflow as tf
 import keras
@@ -52,69 +26,100 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, Flatten
 from keras.layers import Conv2D, MaxPooling2D
 from keras.utils import to_categorical
+from keras.models import load_model
 
 
-'''
-trainset = arr[:split]
-trainset = np.reshape(trainset,(split,128,128,1))
+
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
+datadir = '/Users/will/projects/legoproj/augdatatest/kps/'
+
+random.seed(0)
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument('-p', '--predict', dest='predict', action='store_true', help='Predict the data or not?', required=False)
+
+args = parser.parse_args()
 
 
-testset = arr[split:]
-testset = np.reshape(testset,(datasize - split,128,128,1))
 
-print(trainset.shape)
+training_images = []
+points_images = []
 
+for i in range(0,2000):
+    img = np.array(Image.open(datadir + str(i) +"pole.png").convert(mode="L"))
+    img = np.reshape(img, (256,256,1))
+    img = img/255
 
-testset = testset/255.0
-trainset = trainset/255.0
-
-class_dict = {"Wing": 0, "Brick": 1, "Pole": 2}
-
-labels = np.zeros(datasize)
-
-i = 0
-
-with open("./pose_basic_train/labels.txt") as fp:
+    pts = np.array(Image.open(datadir + str(i) +"pts.png").convert(mode="L"))
+    pts = np.reshape(pts, (32,32,1)) 
+    pts = pts/255 
     
-    line = fp.readline()
+    training_images.append(img)
+    points_images.append(pts)
 
-    while line:
-        
-        parts = line.split()
-        labels[i] = float(parts[1])
-        line = fp.readline()
-        i+=1
+imgsarr = np.array(training_images)
+ptsarr = np.array(points_images)
 
 
-trainlabels = labels[:split]
-testlabels = labels[split:]
-'''
+
+
+if args.predict:
+
+    model = load_model(datadir + 'reg.h5')
+
+    while input("Predict?: ") != 'q':
+
+        index = random.randint(0, 2000)
+    
+        fig=plt.figure(figsize=(4, 4))
+
+        img = np.array(Image.open(datadir + str(index) +"pole.png").convert(mode="L"))
+        gt = np.array(Image.open(datadir + str(index) +"pts.png").convert(mode="L"))
+
+        pred = model.predict(np.reshape(img, (1,256,256,1)))
+        pred = np.reshape(pred, (32,32))
+
+        fig.add_subplot(2, 1, 1)
+        plt.imshow(img, interpolation='nearest')
+
+        fig.add_subplot(2, 1, 2)
+        plt.imshow(pred, interpolation='nearest')
+
+        fig.add_subplot(2, 2, 2)
+        plt.imshow(gt, interpolation='nearest')        
+
+        plt.show()
+
+    sys.exit()
+
 
 
 model = Sequential()
-model.add(Conv2D(32, kernel_size=(7, 7),
+model.add(Conv2D(32, kernel_size=(6, 6),
                  activation='relu',
-                 input_shape=(512,512,1)))
+                 input_shape=(256,256,1),
+                 padding='same'))
 
-model.add(Conv2D(16, (3, 3), activation='relu'))
-model.add(MaxPooling2D(pool_size=(4, 4)))
-model.add(Dropout(0.25))
-
-model.add(Conv2D(8, (3,3), activation='relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Dropout(0.25))
-
-model.add(Conv2D(4, (3,3), activation='relu'))
+model.add(Conv2D(64, (4, 4), activation='relu', padding='same'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
 
-model.add(Flatten())
-model.add(Dense(4096, activation='relu'))
+model.add(Conv2D(20, (3,3), activation='relu', padding='same'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+
+model.add(Conv2D(10, (3,3), activation='relu', padding='same'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+
+model.add(Conv2D(1, (3,3), activation='linear', padding='same'))
 
 model.compile(optimizer='adam', loss='mse', metrics=['mse','mae'])
 
-history = model.fit(imgsarr, ptsarr, epochs=3, batch_size=20,  verbose=1, validation_split=0.1)
 
-model.save("reg.h5")
+print(model.summary())
+
+history = model.fit(imgsarr[0:1000], ptsarr[0:1000], epochs=3, batch_size=25,  verbose=1, validation_split=0.5)
+
+model.save(datadir + "reg2.h5")
 
 
 # "Loss"
