@@ -27,6 +27,7 @@ from keras.layers import Dense, Dropout, Flatten
 from keras.layers import Conv2D, MaxPooling2D
 from keras.utils import to_categorical
 from keras.models import load_model
+from keras.applications import mobilenet_v2
 
 
 
@@ -52,7 +53,7 @@ for i in range(0,2000):
     img = img/255
 
     pts = np.array(Image.open(datadir + str(i) +"pts.png").convert(mode="L"))
-    pts = np.reshape(pts, (32,32,1)) 
+    pts = np.reshape(pts, (256,256,1)) 
     pts = pts/255 
     
     training_images.append(img)
@@ -66,19 +67,26 @@ ptsarr = np.array(points_images)
 
 if args.predict:
 
-    model = load_model(datadir + 'reg.h5')
+    model = load_model(datadir + 'reg3.h5')
+    n = 'g'
 
-    while input("Predict?: ") != 'q':
+    while n != 'q':
+
+        n = input("Predict?: ")
 
         index = random.randint(0, 2000)
     
         fig=plt.figure(figsize=(4, 4))
 
         img = np.array(Image.open(datadir + str(index) +"pole.png").convert(mode="L"))
+
+        if n == 'r':
+            img = np.array(Image.open(datadir + "idk.png").convert(mode="L"))
+
         gt = np.array(Image.open(datadir + str(index) +"pts.png").convert(mode="L"))
 
         pred = model.predict(np.reshape(img, (1,256,256,1)))
-        pred = np.reshape(pred, (32,32))
+        pred = np.reshape(pred, (256,256))
 
         fig.add_subplot(2, 1, 1)
         plt.imshow(img, interpolation='nearest')
@@ -93,7 +101,14 @@ if args.predict:
 
     sys.exit()
 
+#mobile = mobilenet_v2.MobileNetV2(input_shape=(256,256,3), include_top=False, alpha=1.0, weights='imagenet', input_tensor=None, pooling=None)
 
+
+#print("Mobiling")
+#mobile_results = mobile.predict(imgsarr[0:2])
+
+
+#sys.exit()
 
 model = Sequential()
 model.add(Conv2D(32, kernel_size=(6, 6),
@@ -101,25 +116,26 @@ model.add(Conv2D(32, kernel_size=(6, 6),
                  input_shape=(256,256,1),
                  padding='same'))
 
-model.add(Conv2D(64, (4, 4), activation='relu', padding='same'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Conv2D(48, (5, 5), activation='relu', padding='same'))
+model.add(MaxPooling2D((2,2), padding = 'same'))
 
-model.add(Conv2D(20, (3,3), activation='relu', padding='same'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Conv2D(15, (5, 5), activation='relu', padding='same'))
+model.add(MaxPooling2D((2,2), padding = 'same'))
 
-model.add(Conv2D(10, (3,3), activation='relu', padding='same'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(keras.layers.Conv2DTranspose(10, (2,2), strides=(2,2), padding='same', activation='relu'))
+model.add(keras.layers.Conv2DTranspose(5, (2,2), strides=(2,2), padding='same', activation='relu'))
 
-model.add(Conv2D(1, (3,3), activation='linear', padding='same'))
+
+model.add(Conv2D(1, (4,4), activation='linear', padding='same'))
 
 model.compile(optimizer='adam', loss='mse', metrics=['mse','mae'])
 
 
 print(model.summary())
 
-history = model.fit(imgsarr[0:1000], ptsarr[0:1000], epochs=3, batch_size=25,  verbose=1, validation_split=0.5)
+history = model.fit(imgsarr[0:1000], ptsarr[0:1000], epochs=2, batch_size=20,  verbose=1, validation_split=0.6)
 
-model.save(datadir + "reg2.h5")
+model.save(datadir + "reg3.h5")
 
 
 # "Loss"

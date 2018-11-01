@@ -217,8 +217,8 @@ for x in range(2000):
     scene.render.filepath = write_path + str(x) + "pole.png"
     bpy.ops.render.render(write_still = 1)
 
-    scene.render.resolution_x = 32
-    scene.render.resolution_y = 32
+    scene.render.resolution_x = 256
+    scene.render.resolution_y = 256
     scene.render.resolution_percentage = 100
 
     pole.hide = True
