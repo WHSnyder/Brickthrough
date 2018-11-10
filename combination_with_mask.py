@@ -3,12 +3,15 @@ import random
 import math
 import time
 import numpy as np
+import json
+import mathutils as mu
+import os
 
 
 from math import degrees
 
 
-mode = "train"
+mode = "studs"
 
 write_path = "/Users/will/projects/legoproj/data_oneofeach/{}_oneofeach/".format(mode)
 
@@ -59,11 +62,25 @@ def objcopy(obj):
 
     return newObj
 
+
+
+projection_matrix = camera.calc_matrix_camera(
+        bpy.context.scene.render.resolution_x,
+        bpy.context.scene.render.resolution_y,
+        bpy.context.scene.render.pixel_aspect_x,
+        bpy.context.scene.render.pixel_aspect_y,
+)
+
+print(projection_matrix)
+
+
+
+
 '''
 Rendering/masking methods
 '''
 
-def shadeMasks(objects, x):
+def shadeMasks(objects, x, objdata):
 
     bck.data.materials[0] = black_shadeless
 
@@ -86,6 +103,10 @@ def shadeMasks(objects, x):
             count+=1
 
             obj.data.materials[0] = black_shadeless
+
+            objdata[key + str(count)] = str(obj.matrix_world)
+
+
 
 '''
 Wing generation and children placement
@@ -163,9 +184,16 @@ bpy.context.scene.objects.link(c2)
 
 print(bck)
 
-num = 1500
+num = 10
+
+
+os.system("rm " + write_path + "*.png")
+os.system("rm " + write_path + "mats/*")
+
 
 for x in range(num):
+
+    objdata = {}
 
     c1.location = (0,0,0)
     c2.location = (0,0,0)
@@ -199,13 +227,20 @@ for x in range(num):
     scene.render.filepath = write_path + str(x) + "_" + mode + "_a" + ".png"
     bpy.ops.render.render(write_still = 1)
 
-    shadeMasks(objs,x)
+    cammat = camera.matrix_world.copy()
+
+    objdata["Camera"] = str(cammat.inverted())
+
+    shadeMasks(objs,x, objdata)
 
     for key in objs:
         for obj in objs[key]:
             print("wiping")
             scene_objs.remove(obj, do_unlink=True)
         objs[key].clear()
+
+    with open(write_path + "mats/" + str(x) + ".txt", 'a+') as fp:
+        json.dump(objdata, fp)
 
 
 print("Generated " + str(x+1) + " images in " + str(float(millis() - timestart)/1000.0) + " seconds")

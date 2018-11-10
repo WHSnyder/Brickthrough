@@ -67,7 +67,7 @@ ptsarr = np.array(points_images)
 
 if args.predict:
 
-    model = load_model(datadir + 'reg3.h5')
+    model = load_model(datadir + 'reg4.h5')
     n = 'g'
 
     while n != 'q':
@@ -111,21 +111,31 @@ if args.predict:
 #sys.exit()
 
 model = Sequential()
-model.add(Conv2D(32, kernel_size=(6, 6),
+model.add(Conv2D(32, kernel_size=(3, 3),
                  activation='relu',
                  input_shape=(256,256,1),
                  padding='same'))
 
-model.add(Conv2D(48, (5, 5), activation='relu', padding='same'))
-model.add(MaxPooling2D((2,2), padding = 'same'))
+model.add(Conv2D(32, (3, 3), activation='relu', padding='same'))
+#model.add(MaxPooling2D((2,2), padding = 'same'))
 
-model.add(Conv2D(15, (5, 5), activation='relu', padding='same'))
-model.add(MaxPooling2D((2,2), padding = 'same'))
+model.add(Conv2D(32, (3, 3), activation='relu', padding='same', dilation_rate=(4,4) ))
+model.add(Dropout(.1))
 
-model.add(keras.layers.Conv2DTranspose(10, (2,2), strides=(2,2), padding='same', activation='relu'))
-model.add(keras.layers.Conv2DTranspose(5, (2,2), strides=(2,2), padding='same', activation='relu'))
+#model.add(MaxPooling2D((2,2), padding = 'same'))
+
+model.add(Conv2D(32, (3, 3), activation='relu', padding='same', dilation_rate=(16,16) ))
+model.add(Dropout(.2))
+#model.add(MaxPooling2D((2,2), padding = 'same'))
+
+model.add(Conv2D(32, (3, 3), activation='relu', padding='same', dilation_rate=(4,4) ))
+#model.add(MaxPooling2D((2,2), padding = 'same'))
+model.add(Dropout(.2))
 
 
+#model.add(keras.layers.Conv2DTranspose(10, (2,2), strides=(2,2), padding='same', activation='relu'))
+#model.add(keras.layers.Conv2DTranspose(8, (2,2), strides=(2,2), padding='same', activation='relu'))
+#model.add(keras.layers.Conv2DTranspose(5, (2,2), strides=(2,2), padding='same', activation='relu'))
 model.add(Conv2D(1, (4,4), activation='linear', padding='same'))
 
 model.compile(optimizer='adam', loss='mse', metrics=['mse','mae'])
@@ -135,7 +145,7 @@ print(model.summary())
 
 history = model.fit(imgsarr[0:1000], ptsarr[0:1000], epochs=2, batch_size=20,  verbose=1, validation_split=0.6)
 
-model.save(datadir + "reg3.h5")
+model.save(datadir + "reg4.h5")
 
 
 # "Loss"
