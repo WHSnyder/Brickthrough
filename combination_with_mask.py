@@ -11,7 +11,7 @@ import os
 from math import degrees
 
 
-mode = "studs"
+mode = "studsclose"
 
 write_path = "/Users/will/projects/legoproj/data_oneofeach/{}_oneofeach/".format(mode)
 
@@ -184,7 +184,7 @@ bpy.context.scene.objects.link(c2)
 
 print(bck)
 
-num = 10
+num = 3000
 
 
 os.system("rm " + write_path + "*.png")
@@ -207,7 +207,7 @@ for x in range(num):
         c2.rotation_euler = (0,0,PI/2*random.randint(-18,18)/18)
         c2.location = (3, 2 * random.randint(-1,1), .7)
 
-        camera.location = (random.randint(6,11) * -1 if random.randint(0,1) < 1 else 1, random.randint(6,11) * -1 if random.randint(0,1) < 1 else 1, random.randint(12,13))
+        camera.location = (random.randint(5,7) * -1 if random.randint(0,1) < 1 else 1, random.randint(5,7) * -1 if random.randint(0,1) < 1 else 1, random.randint(5,6))
 
     else:
         w2 = genWing(c2)

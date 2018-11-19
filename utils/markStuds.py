@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
-
-
-
 import numpy as np
-import sys
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -29,11 +25,14 @@ from keras.utils import to_categorical
 from keras.models import load_model
 from keras.applications import mobilenet_v2
 
+import json
+import re
+
 
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 datadir = '/Users/will/projects/legoproj/augdatatest/kps/'
-
+'''
 random.seed(0)
 
 parser = argparse.ArgumentParser()
@@ -41,6 +40,12 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-p', '--predict', dest='predict', action='store_true', help='Predict the data or not?', required=False)
 
 args = parser.parse_args()
+'''
+
+#expr = re.compile("^\((([-]?[0-9]*\.[0-9]{4})\,){3}([-]?[0-9]*\.[0-9]{4})\)$")
+
+expr = re.compile("([-]?[0-9]*\.[0-9]{4})")
+
 
 
 def get_matrix(lines):
@@ -53,6 +58,43 @@ def read_projection_matrix(filename):
         lines = f.readlines()
     return get_matrix(lines)
 
+
+
+def matrix_from_string(matstring):
+
+    #matstring = re.sub(r"[\n\t\s]*", "", matstring)
+    #print(matstring)
+
+    matches = expr.findall(matstring)
+
+    nums = np.asarray(list(map(lambda x: float(x), matches)), dtype=np.float32)
+    nums = np.reshape(nums, (4,4))
+
+    return nums
+    
+
+
+def get_object_matrices(filename):
+
+    data = {}
+
+    with open(filename) as json_file:
+        data = json.load(json_file)
+
+    for key in data:
+        data[key] = matrix_from_string(data[key])
+
+    return data
+
+
+
+print("going")
+get_object_matrices("/Users/will/projects/legoproj/data_oneofeach/studs_oneofeach/mats/0.txt")
+
+
+
+
+sys.exit()
 
 
 training_images = []
