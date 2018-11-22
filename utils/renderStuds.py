@@ -63,7 +63,7 @@ def objcopy(obj):
     return newObj
 
 
-wing = scene_objs['BrickVerts']
+wing = scene_objs['Wing']
 wingStudVerts = []
 
 
@@ -85,9 +85,9 @@ verts = []
 #print('Boutta')
 
 for vert in mesh.vertices:
-    coord = vert.co + offset
-    if abs(coord[2] - 1.6) < .00001:
-        if abs(coord[0] % 8) < .00001 and abs(coord[1] % 8) < .00001:
+    coord = 100*vert.co
+    if abs(coord[2] - 6.4) < .00001:
+        if abs(coord[0] % 4) < .00001 and abs(coord[1] % 4) < .00001:
             verts.append(vert.co)
 
 writestring = 'Brick\n'

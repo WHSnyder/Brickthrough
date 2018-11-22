@@ -11,7 +11,7 @@ import os
 from math import degrees
 
 
-mode = "studsclose"
+mode = "studs"
 
 write_path = "/Users/will/projects/legoproj/data_oneofeach/{}_oneofeach/".format(mode)
 
@@ -62,17 +62,17 @@ def objcopy(obj):
 
     return newObj
 
+bpy.context.scene.update()
 
 
 projection_matrix = camera.calc_matrix_camera(
         bpy.context.scene.render.resolution_x,
-        bpy.context.scene.render.resolution_y,
-        bpy.context.scene.render.pixel_aspect_x,
-        bpy.context.scene.render.pixel_aspect_y,
-)
+        bpy.context.scene.render.resolution_y)
+        #bpy.context.scene.render.pixel_aspect_x,
+        #bpy.context.scene.render.pixel_aspect_y,
+#)
 
-print(projection_matrix)
-
+bpy.context.scene.update()
 
 
 
@@ -98,13 +98,13 @@ def shadeMasks(objects, x, objdata):
             scene.render.resolution_percentage = 100
                     
             scene.render.image_settings.file_format = 'PNG'
-            scene.render.filepath = write_path + str(x) + "_" + mode + "_" + key + str(count) + ".png"
+            scene.render.filepath = write_path + str(x) + "_" + mode + "_" + obj.name + ".png"
             bpy.ops.render.render(write_still = 1)
             count+=1
 
             obj.data.materials[0] = black_shadeless
 
-            objdata[key + str(count)] = str(obj.matrix_world)
+            objdata[obj.name] = str(obj.matrix_world)
 
 
 
@@ -128,7 +128,7 @@ def genPiece(center):
         pt = 90 if mult <= 0 else -90
         pt = pt + .7 * mult * 50
         obj.rotation_euler = (0,0, math.radians(pt))
-        print("Generating pole")
+        #print("Generating pole")
         return 'Pole', obj
 
     else:
@@ -136,7 +136,7 @@ def genPiece(center):
         pt = random.randint(0,20)/20
         obj.rotation_euler = (0,0,pt * PI)
         obj.location = addtups( center , mltup(posm,.6) )
-        print("Generating brick")
+        #print("Generating brick")
         return 'Brick', obj
 
 
@@ -174,6 +174,8 @@ def genWing(center):
         o.parent = center
         o.matrix_parent_inverse = center.matrix_world.inverted()
 
+    bpy.context.scene.update()
+
 
 
 c1 = bpy.data.objects.new("empty", None)
@@ -182,9 +184,9 @@ bpy.context.scene.objects.link(c1)
 c2 = bpy.data.objects.new("empty", None)
 bpy.context.scene.objects.link(c2)
 
-print(bck)
+#print(bck)
 
-num = 3000
+num = 1
 
 
 os.system("rm " + write_path + "*.png")
@@ -207,7 +209,7 @@ for x in range(num):
         c2.rotation_euler = (0,0,PI/2*random.randint(-18,18)/18)
         c2.location = (3, 2 * random.randint(-1,1), .7)
 
-        camera.location = (random.randint(5,7) * -1 if random.randint(0,1) < 1 else 1, random.randint(5,7) * -1 if random.randint(0,1) < 1 else 1, random.randint(5,6))
+        camera.location = (random.randint(6,11) * -1 if random.randint(0,1) < 1 else 1, random.randint(6,11) * -1 if random.randint(0,1) < 1 else 1, random.randint(12,13))
 
     else:
         w2 = genWing(c2)
@@ -216,6 +218,7 @@ for x in range(num):
 
         camera.location = (random.randint(5,7) * -1 if random.randint(0,1) < 1 else 1, random.randint(5,7) * -1 if random.randint(0,1) < 1 else 1, random.randint(6,7))
 
+    bpy.context.scene.update()
 
     scene.render.resolution_x = 512
     scene.render.resolution_y = 512
@@ -230,16 +233,18 @@ for x in range(num):
     cammat = camera.matrix_world.copy()
 
     objdata["Camera"] = str(cammat.inverted())
+    objdata["Projection"] = str(projection_matrix)
 
     shadeMasks(objs,x, objdata)
-
+    '''
     for key in objs:
         for obj in objs[key]:
             print("wiping")
             scene_objs.remove(obj, do_unlink=True)
         objs[key].clear()
+    '''
 
-    with open(write_path + "mats/" + str(x) + ".txt", 'a+') as fp:
+    with open(write_path + "mats/" + str(x) + ".txt", 'w') as fp:
         json.dump(objdata, fp)
 
 

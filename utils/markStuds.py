@@ -48,15 +48,17 @@ expr = re.compile("([-]?[0-9]*\.[0-9]{4})")
 
 
 
+
 def get_matrix(lines):
     return np.array([[float(y) for y in x.strip().split(" ")] for x in lines])
 
-def read_projection_matrix(filename):
-    if not os.path.exists(filename):
-        filename = "/Users/will/Desktop/projection.txt"
+def read_projection_matrix():
+    filename = "/Users/will/Desktop/projection.txt"
     with open(filename, "r") as f:
         lines = f.readlines()
+    
     return get_matrix(lines)
+
 
 
 
@@ -72,8 +74,6 @@ def matrix_from_string(matstring):
 
     return nums
     
-
-
 def get_object_matrices(filename):
 
     data = {}
@@ -88,8 +88,89 @@ def get_object_matrices(filename):
 
 
 
-print("going")
-get_object_matrices("/Users/will/projects/legoproj/data_oneofeach/studs_oneofeach/mats/0.txt")
+
+def get_object_studs(objname):
+    filename = "/Users/will/Desktop/{}.txt".format(objname)
+    with open(filename, "r") as fp:
+        verts = fp.read()
+    lines = verts.split("\n")[1:]
+    verts = []
+
+    for line in lines:
+
+        if line == "":
+            break
+
+        parts = line.split(",")
+
+        nums = list(map(lambda x: float(x), parts))
+        vert = np.ones(4, dtype=np.float32)
+        vert[0:3] = nums[0:3]
+
+        verts.append(vert)
+
+    #print(verts)
+    #print("Verts shape: {}".format(v))
+    return verts
+
+
+
+def verts_to_screen(model, view, frust, verts):
+    
+    mvp = np.matmul( frust, np.matmul(view, model) )
+    screenverts = []
+    worldverts = []
+    camverts = []
+
+    print("Model: \n{}".format(str(model)))
+    print("View: \n{}".format(str(view)))
+    print("Frust: \n{}".format(str(frust)))
+    print("--------------------------------------")
+    print("Verts local coordinates: \n{}\n".format(str(verts)))
+
+    for vert in verts:
+        worldvert = np.matmul(model, vert)
+        camvert = np.matmul(view, worldvert)
+        screenvert = np.matmul(frust, camvert)
+        screenvert = screenvert/screenvert[3]
+
+        screenvert[0:2] = (screenvert[0:2] + 1)/2
+
+        screenverts.append(screenvert)
+        worldverts.append(worldvert)
+        camverts.append(camvert)
+
+    print("Verts world coordinates: \n{}\n".format(worldverts))
+    print("Verts camera coordinates: \n{}\n".format(camverts))
+    print("Verts screen coordinates: \n{}\n".format(screenverts))
+    print("--------------------------------------")
+
+    return screenverts
+
+
+
+modelmats = get_object_matrices("/Users/will/projects/legoproj/data_oneofeach/studs_oneofeach/mats/0.txt")
+
+cammat = modelmats["Camera"]
+projmat = modelmats["Projection"]
+
+studs = get_object_studs("brick")
+
+brickstuds = np.zeros((512,512))
+
+for key in modelmats:
+
+    if "Brick.001" not in key:
+        continue
+
+    print("====================================\n{} :".format(key))
+    verts_to_screen(modelmats[key], cammat, projmat, studs) 
+    print("====================================")
+
+
+for vert in verts_to_screen(modelmats["Brick.001"], cammat, projmat, studs) 
+
+
 
 
 
