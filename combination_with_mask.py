@@ -62,15 +62,17 @@ def objcopy(obj):
 
     return newObj
 
-bpy.context.scene.update()
 
+
+scene.render.resolution_x = 512
+scene.render.resolution_y = 512
+scene.render.resolution_percentage = 100
+
+bpy.context.scene.update()
 
 projection_matrix = camera.calc_matrix_camera(
         bpy.context.scene.render.resolution_x,
         bpy.context.scene.render.resolution_y)
-        #bpy.context.scene.render.pixel_aspect_x,
-        #bpy.context.scene.render.pixel_aspect_y,
-#)
 
 bpy.context.scene.update()
 
@@ -122,14 +124,14 @@ def genPiece(center):
     obj = None
 
     if gimme():
-        obj = objcopy(pole)
+        obj = objcopy(brick)
         mult = random.randint(-1,1)
         obj.location = addtups( center , tuple(mult * x for x in posm) )
         pt = 90 if mult <= 0 else -90
         pt = pt + .7 * mult * 50
         obj.rotation_euler = (0,0, math.radians(pt))
         #print("Generating pole")
-        return 'Pole', obj
+        return 'Brick', obj
 
     else:
         obj = objcopy(brick)
@@ -199,7 +201,7 @@ for x in range(num):
 
     c1.location = (0,0,0)
     c2.location = (0,0,0)
-    
+    '''
     if gimme():
         w1 = genWing(c1)
         c1.rotation_euler = (0,0,PI/2*random.randint(-18,18)/18)
@@ -210,13 +212,13 @@ for x in range(num):
         c2.location = (3, 2 * random.randint(-1,1), .7)
 
         camera.location = (random.randint(6,11) * -1 if random.randint(0,1) < 1 else 1, random.randint(6,11) * -1 if random.randint(0,1) < 1 else 1, random.randint(12,13))
+    '''
+    #else:
+    w2 = genWing(c2)
+    c2.location = (.3 * random.randint(-1,1), .3 * random.randint(-1,1), 0)
+    c2.rotation_euler = (0,0,PI/2*random.randint(-18,18)/18)
 
-    else:
-        w2 = genWing(c2)
-        c2.location = (.3 * random.randint(-1,1), .3 * random.randint(-1,1), 0)
-        c2.rotation_euler = (0,0,PI/2*random.randint(-18,18)/18)
-
-        camera.location = (random.randint(5,7) * -1 if random.randint(0,1) < 1 else 1, random.randint(5,7) * -1 if random.randint(0,1) < 1 else 1, random.randint(6,7))
+    camera.location = (random.randint(5,7) * -1 if random.randint(0,1) < 1 else 1, random.randint(5,7) * -1 if random.randint(0,1) < 1 else 1, random.randint(6,7))
 
     bpy.context.scene.update()
 
@@ -236,13 +238,13 @@ for x in range(num):
     objdata["Projection"] = str(projection_matrix)
 
     shadeMasks(objs,x, objdata)
-    '''
+    
     for key in objs:
         for obj in objs[key]:
             print("wiping")
             scene_objs.remove(obj, do_unlink=True)
         objs[key].clear()
-    '''
+    
 
     with open(write_path + "mats/" + str(x) + ".txt", 'w') as fp:
         json.dump(objdata, fp)

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
+
 import numpy as np
 
 import matplotlib as mpl
@@ -16,6 +17,7 @@ import argparse
 import random
 
 import tensorflow as tf
+
 import keras
 from keras.datasets import mnist
 from keras.models import Sequential
@@ -92,10 +94,15 @@ def get_object_matrices(filename):
 
 
 def get_object_studs(objname):
+
     filename = "/Users/will/Desktop/{}.txt".format(objname)
     with open(filename, "r") as fp:
         verts = fp.read()
     lines = verts.split("\n")[1:]
+
+    if objname == "wing":
+        print("Num verts in a wing: " + str(len(lines)))
+
     verts = []
 
     for line in lines:
@@ -111,41 +118,41 @@ def get_object_studs(objname):
 
         verts.append(vert)
 
-    #print(verts)
-    #print("Verts shape: {}".format(v))
     return verts
 
 
 
 def verts_to_screen(model, view, frust, verts):
     
-    mvp = np.matmul( frust, np.matmul(view, model) )
+    #mvp = np.matmul( frust, np.matmul(view, model) )
     screenverts = []
     worldverts = []
     camverts = []
 
-    print("Model: \n{}".format(str(model)))
-    print("View: \n{}".format(str(view)))
-    print("Frust: \n{}".format(str(frust)))
-    print("--------------------------------------")
-    print("Verts local coordinates: \n{}\n".format(str(verts)))
+    #print("Model: \n{}".format(str(model)))
+    #print("View: \n{}".format(str(view)))
+    #print("Frust: \n{}".format(str(frust)))
+    #print("--------------------------------------")
+    #print("Verts local coordinates: \n{}\n".format(str(verts)))
 
     for vert in verts:
+        print("Shape: " + str(vert.shape))
         worldvert = np.matmul(model, vert)
         camvert = np.matmul(view, worldvert)
         screenvert = np.matmul(frust, camvert)
         screenvert = screenvert/screenvert[3]
 
-        screenvert[0:2] = (screenvert[0:2] + 1)/2
-
-        screenverts.append(screenvert)
+        if abs(screenvert[0]) < 1 and abs(screenvert[1]) < 1:
+            screenvert[0:2] = (screenvert[0:2] + 1)/2
+            screenverts.append(screenvert)
+        
         worldverts.append(worldvert)
         camverts.append(camvert)
 
-    print("Verts world coordinates: \n{}\n".format(worldverts))
-    print("Verts camera coordinates: \n{}\n".format(camverts))
-    print("Verts screen coordinates: \n{}\n".format(screenverts))
-    print("--------------------------------------")
+    #print("Verts world coordinates: \n{}\n".format(worldverts))
+    #print("Verts camera coordinates: \n{}\n".format(camverts))
+    #print("Verts screen coordinates: \n{}\n".format(screenverts))
+    #print("--------------------------------------")
 
     return screenverts
 
@@ -156,32 +163,40 @@ modelmats = get_object_matrices("/Users/will/projects/legoproj/data_oneofeach/st
 cammat = modelmats["Camera"]
 projmat = modelmats["Projection"]
 
-studs = get_object_studs("brick")
+brickstuds = get_object_studs("brick")
+wingstuds = get_object_studs("wing")
 
-brickstuds = np.zeros((512,512))
+#sys.exit()
+
+scenestuds = np.zeros((512,512))
+
+screenverts = []
 
 for key in modelmats:
 
-    if "Brick.001" not in key:
+    if "Brick" in key:
+        studs = brickstuds
+    elif "Wing" in key:
+        studs = wingstuds
+    else:
         continue
 
-    print("====================================\n{} :".format(key))
-    verts_to_screen(modelmats[key], cammat, projmat, studs) 
-    print("====================================")
+    #print("====================================\n{} :".format(key))
+    screenverts += verts_to_screen(modelmats[key], cammat, projmat, studs) 
+    #print("====================================")
 
 
-for vert in verts_to_screen(modelmats["Brick.001"], cammat, projmat, studs):
+for vert in screenverts:
     npcoord = tuple([math.floor((1 - vert[1]) * 512), math.floor(vert[0] * 512)])
-    brickstuds[npcoord[0], npcoord[1]] = 255
+    scenestuds[npcoord[0], npcoord[1]] = 1
 
-plt.imshow(brickstuds, interpolation='nearest')        
+plt.imshow(scenestuds, interpolation='nearest')        
 plt.show()
 
 
 
 
-if input() != "":
-    sys.exit()
+sys.exit()
 
 
 training_images = []
