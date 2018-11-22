@@ -27,6 +27,8 @@ from keras.applications import mobilenet_v2
 
 import json
 import re
+import cv2
+import math
 
 
 
@@ -168,14 +170,18 @@ for key in modelmats:
     print("====================================")
 
 
-for vert in verts_to_screen(modelmats["Brick.001"], cammat, projmat, studs) 
+for vert in verts_to_screen(modelmats["Brick.001"], cammat, projmat, studs):
+    npcoord = tuple([math.floor((1 - vert[1]) * 512), math.floor(vert[0] * 512)])
+    brickstuds[npcoord[0], npcoord[1]] = 255
+
+plt.imshow(brickstuds, interpolation='nearest')        
+plt.show()
 
 
 
 
-
-
-sys.exit()
+if input() != "":
+    sys.exit()
 
 
 training_images = []
