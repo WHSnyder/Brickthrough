@@ -147,7 +147,7 @@ def genWing(center):
 
     print("Generating wing")
     
-    if gimme() or gimme():
+    if True or gimme() or gimme():
         newWing = objcopy(wing)
         newWing.location = (0,0,0)
         newWing.rotation_euler = (0,0,0)
@@ -155,26 +155,25 @@ def genWing(center):
         newWing.parent = center  
         newWing.matrix_parent_inverse = center.matrix_world.inverted()
      
-    ###region 1
+    '''
     if gimme():
         l, o = genPiece((0,1.6,.7))
         objs[l].append(o)
         o.parent = center
         o.matrix_parent_inverse = center.matrix_world.inverted()
 
-    ###region 2
     if gimme():
         l, o = genPiece((0,-.7,.7))
         objs[l].append(o)
         o.parent = center
         o.matrix_parent_inverse = center.matrix_world.inverted()
 
-    ###region 3
     if gimme():
         l, o = genPiece((-.6,-1.6,.7))
         objs[l].append(o)
         o.parent = center
         o.matrix_parent_inverse = center.matrix_world.inverted()
+    '''
 
     bpy.context.scene.update()
 
@@ -186,10 +185,7 @@ bpy.context.scene.objects.link(c1)
 c2 = bpy.data.objects.new("empty", None)
 bpy.context.scene.objects.link(c2)
 
-#print(bck)
-
 num = 1
-
 
 os.system("rm " + write_path + "*.png")
 os.system("rm " + write_path + "mats/*")
