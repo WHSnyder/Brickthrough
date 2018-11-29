@@ -5,7 +5,8 @@ import sys
 
 
 img0 = cv2.imread('wing2.png',0)
-img = cv2.imread('wing.png')
+#img = cv2.imread('wing.png')
+img = cv2.imread('/Users/will/projects/legoproj/data_oneofeach/val_oneofeach/3_val_a.png')
 
 
 #orb = cv2.ORB_create()#ORB()
@@ -15,7 +16,7 @@ img = cv2.imread('wing.png')
 
 gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 
-gray = np.float32(gray)
+#gray = np.float32(gray)
 
 
 gray = cv2.bilateralFilter(gray, 11, 17, 17)
@@ -27,6 +28,9 @@ if cv2.waitKey(0) & 0xff == 27:
 
 
 sys.exit()
+
+
+
 dst = cv2.cornerHarris(gray,2,3,0.01)
 
 #result is dilated for marking the corners, not important

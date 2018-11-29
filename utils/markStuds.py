@@ -172,7 +172,7 @@ def getStudMask(i):
 
 if args.predict:
 
-    model = load_model(modeldir + 'studTracer.h5')
+    model = load_model(modeldir + 'studTracer2.h5')
 
     while input("Predict?: ") != 'q':
 
@@ -181,6 +181,8 @@ if args.predict:
         fig = plt.figure(figsize=(4, 4))
 
         img = np.array(Image.open(datadir + str(index) +"_studs_a.png").convert(mode="L"))/255
+        #img = np.array(Image.open("wing.png").convert(mode="L"))/255
+
         gt = np.reshape(getStudMask(index), (256,256))
 
         print("Gt sum: {}".format(np.sum(gt)))
@@ -197,9 +199,16 @@ if args.predict:
         plt.imshow(gt, interpolation='nearest', cmap='gray')
 
         fig.add_subplot(2, 2, 3)
-        plt.imshow(pred, interpolation='nearest', cmap='gray')
+        plt.imshow(pred, interpolation='nearest')
 
         plt.show()
+        
+
+        #verts = get_object_studs
+
+        #cv2.imshow('image',pred)
+        #cv2.waitKey(0)
+        #cv2.destroyAllWindows()
 
     sys.exit()
 
@@ -248,38 +257,34 @@ imgsarr = np.array(imgsarr)
 print("Preproc done...")
 
 
-
 model = Sequential()
-model.add(Conv2D(32, kernel_size=(3, 3),
+model.add(Conv2D(64, kernel_size=(5, 5),
                  activation='relu',
                  input_shape=(512,512,1),
                  padding='same'))
 
-model.add(Conv2D(32, (3, 3), activation='relu', padding='same'))
-#model.add(MaxPooling2D((2,2), padding = 'same'))
+#model.add(Conv2D(20, (4, 4), activation='relu', padding='same'))
 
-model.add(Conv2D(32, (3, 3), activation='relu', padding='same', dilation_rate=(4,4) ))
-model.add(Dropout(.2))
+
+model.add(Conv2D(10, (3, 3), activation='relu', padding='same', dilation_rate=(3,3)))
 model.add(MaxPooling2D((2,2), padding = 'same'))
 
-model.add(Conv2D(10, (3, 3), activation='relu', padding='same', dilation_rate=(2,2) ))
+#model.add(Conv2D(15, (3, 3), activation='relu', padding='same', dilation_rate=(2,2) ))
 #model.add(MaxPooling2D((2,2), padding = 'same'))
-model.add(Dropout(.2))
-
 
 #model.add(keras.layers.Conv2DTranspose(10, (2,2), strides=(2,2), padding='same', activation='relu'))
 #model.add(keras.layers.Conv2DTranspose(8, (2,2), strides=(2,2), padding='same', activation='relu'))
 #model.add(keras.layers.Conv2DTranspose(5, (2,2), strides=(2,2), padding='same', activation='relu'))
-model.add(Conv2D(1, (4,4), activation='linear', padding='same'))
+model.add(Conv2D(1, (4,4), activation='relu', padding='same'))
 
 model.compile(optimizer='adam', loss='mse', metrics=['mse','mae'])
 
 
 print(model.summary())
 
-history = model.fit(imgsarr[0:999], studimgs[0:999], epochs=3, batch_size=10,  verbose=1, validation_split=0.6)
+history = model.fit(imgsarr[0:999], studimgs[0:999], epochs=2, batch_size=15,  verbose=1, validation_split=0.6)
 
-model.save(modeldir + "studTracer.h5")
+model.save(modeldir + "studTracer2.h5")
 
 
 # "Loss"
