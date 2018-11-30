@@ -11,7 +11,7 @@ import os
 from math import degrees
 
 
-mode = "studs"
+mode = "pole"
 
 write_path = "/Users/will/projects/legoproj/data_oneofeach/{}_oneofeach/".format(mode)
 
@@ -124,7 +124,7 @@ def genPiece(center):
     obj = None
 
     if gimme():
-        obj = objcopy(brick)
+        obj = objcopy(pole)
         mult = random.randint(-1,1)
         obj.location = addtups( center , tuple(mult * x for x in posm) )
         pt = 90 if mult <= 0 else -90
@@ -134,7 +134,7 @@ def genPiece(center):
         return 'Brick', obj
 
     else:
-        obj = objcopy(brick)
+        obj = objcopy(pole)
         pt = random.randint(0,20)/20
         obj.rotation_euler = (0,0,pt * PI)
         obj.location = addtups( center , mltup(posm,.6) )
@@ -147,21 +147,23 @@ def genWing(center):
 
     print("Generating wing")
     
-    if True or gimme() or gimme():
+    '''if True or gimme() or gimme():
         newWing = objcopy(wing)
         newWing.location = (0,0,0)
         newWing.rotation_euler = (0,0,0)
         objs["Wing"].append(newWing)
         newWing.parent = center  
         newWing.matrix_parent_inverse = center.matrix_world.inverted()
-     
     '''
+     
+    
     if gimme():
         l, o = genPiece((0,1.6,.7))
         objs[l].append(o)
         o.parent = center
         o.matrix_parent_inverse = center.matrix_world.inverted()
-
+        
+    '''
     if gimme():
         l, o = genPiece((0,-.7,.7))
         objs[l].append(o)
@@ -185,7 +187,7 @@ bpy.context.scene.objects.link(c1)
 c2 = bpy.data.objects.new("empty", None)
 bpy.context.scene.objects.link(c2)
 
-num = 1
+num = 5
 
 os.system("rm " + write_path + "*.png")
 os.system("rm " + write_path + "mats/*")
