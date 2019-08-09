@@ -86,7 +86,7 @@ testlabels = labels[split:]
 
 
 model = Sequential()
-model.add(Conv2D(64, kernel_size=(6, 6),
+model.add(Conv2D(10, kernel_size=(6, 6),
                  activation='relu',
                  input_shape=(128,128,1)))
 model.add(Conv2D(32, (3, 3), activation='relu'))
