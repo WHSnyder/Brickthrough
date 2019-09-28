@@ -1,6 +1,7 @@
 import numpy as np
 import json
 import re
+import math
 
 expr = re.compile("([-]?[0-9]*\.[0-9]{4})")
 dim = 512
@@ -116,7 +117,7 @@ def getStudMask(i):
         screenverts += verts_to_screen(modelmats[key], cammat, projmat, studs) 
 
     for vert in screenverts:
-        npcoord = tuple([math.floor(1 - vert[1] * maskdim), math.floor(vert[0] * maskdim)])
+        npcoord = tuple([math.floor((1 - vert[1]) * maskdim), math.floor(vert[0] * maskdim)])
         scenestuds[npcoord[0], npcoord[1]] = 1
 
     scenestuds = np.reshape(scenestuds, (maskdim,maskdim,1))
@@ -124,19 +125,34 @@ def getStudMask(i):
     return scenestuds
 
 
+def toNDC(verts, dims):
+    newverts = []
+    for vert in verts:
+        npcoord = tuple([math.floor(vert[0] * dims[0]), math.floor((1 - vert[1]) * dims[1])])
+        newverts.append(npcoord)
+    return np.asarray(newverts)
+
+
+
 
 def getCalibCorrs():
-    path = "./calib_data/calibdata.txt"
+    path = "/Users/will/projects/legoproj/utils/calib_data/calibdata.txt"
 
-    with open(filename) as json_file:
+    with open(path) as json_file:
         data = json.load(json_file)
 
     view = matrix_from_string(data["View"])
     model = matrix_from_string(data["Model"])
-	proj = matrix_from_string(data["Projection"])
+    proj = matrix_from_string(data["Projection"])
 
-    verts = np.asarray(map(float, data["ObjCoords"]))
+    verts = []
+    for vert in np.asarray(data["ObjCoords"]):
+        newvert = np.ones(4, dtype=np.float32)
+        newvert[0:3] = vert[0:3]
+        verts.append(newvert)
+
+    verts = np.asarray(verts)
 
     screenverts = verts_to_screen(model, view, proj, verts)
 
-    return verts, screenverts
+    return np.asarray(verts), np.asarray(screenverts)
