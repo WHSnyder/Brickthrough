@@ -45,9 +45,10 @@ scenedata["objects"] = {}
 
 for obj in objs:
     objdata = {}
-    objdata["diffuse"] = obj.data.materials[0].diffuse_color
+    df = obj.data.materials[0].diffuse_color
+    objdata["diffuse"] = (df[0],df[1],df[2])
     objdata["matname"] = obj.data.materials[0].name
-    objdata["modelmat"] = obj.matrix_world
+    objdata["modelmat"] = str(obj.matrix_world)
 
     scenedata["objects"][obj.name] = objdata
 
@@ -93,7 +94,12 @@ def shadeMasks():
 
 
 
-os.system("rm " + write_path + "*")
+
+if not os.path.exists(write_path):
+    os.mkdir(write_path)
+else:
+    os.system("rm " + write_path + "*")
+
 if not os.path.exists(write_path + "masks/"):
     os.mkdir(write_path + "masks/")
 else:
