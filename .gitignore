@@ -10,7 +10,8 @@ models/**
 keypointnet/**
 piecetypes/**
 combo_renders/**
-data_oneofeach/**
 nets/**
 augdatatest/**
 unet/**
+data/**
+pieces/**
