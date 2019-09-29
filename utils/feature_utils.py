@@ -31,69 +31,39 @@ def get_object_matrices(filename):
 
 
 
-def get_object_studs(objname):
+def get_object_studs(piece):
 
-    filename = "/Users/will/Desktop/{}.txt".format(objname)
+    piece = piece.replace(".", "_")
+    piece = piece.split("_")[0]
+    file = "/Users/will/projects/legoproj/pieces/{}.json".format(piece)
     
-    with open(filename, "r") as fp:
-        verts = fp.read()
-    lines = verts.split("\n")[1:]
-    verts = []
+    with open(file) as json_file:
+        data = json.load(json_file)
 
-    for line in lines:
-
-        if line == "":
-            break
-
-        parts = line.split(",")
-
-        nums = list(map(lambda x: float(x), parts))
-        vert = np.ones(4, dtype=np.float32)
-        vert[0:3] = nums[0:3]
-
-        verts.append(vert)
-
-    return verts
+    return data["studs"]
 
 
 
 def verts_to_screen(model, view, frust, verts):
     
-    #mvp = np.matmul( frust, np.matmul(view, model) )
     screenverts = []
-    worldverts = []
-    camverts = []
-
-    #print("Model: \n{}".format(str(model)))
-    #print("View: \n{}".format(str(view)))
-    #print("Frust: \n{}".format(str(frust)))
-    #print("--------------------------------------")
-    #print("Verts local coordinates: \n{}\n".format(str(verts)))
+    mvp = np.matmul(frust,np.matmul(view,model))
 
     for vert in verts:
-        #print("Shape: " + str(vert.shape))
-        worldvert = np.matmul(model, vert)
-        camvert = np.matmul(view, worldvert)
-        screenvert = np.matmul(frust, camvert)
+
+        screenvert = np.matmul(mvp, vert)
         screenvert = screenvert/screenvert[3]
 
         if abs(screenvert[0]) < 1 and abs(screenvert[1]) < 1:
             screenvert[0:2] = (screenvert[0:2] + 1)/2
             screenverts.append(screenvert)
-        
-        worldverts.append(worldvert)
-        camverts.append(camvert)
-
-    #print("Verts world coordinates: \n{}\n".format(worldverts))
-    #print("Verts camera coordinates: \n{}\n".format(camverts))
-    #print("Verts screen coordinates: \n{}\n".format(screenverts))
-    #print("--------------------------------------")
 
     return screenverts
 
 
-brickstuds = get_object_studs("brick")
-wingstuds = get_object_studs("wing")
+brickstuds = get_object_studs("Brick")
+wingrstuds = get_object_studs("WingR")
+
 
 
 def getStudMask(i):
@@ -134,7 +104,6 @@ def toNDC(verts, dims):
 
 
 
-
 def getCalibCorrs():
     path = "/Users/will/projects/legoproj/utils/calib_data/calibdata.txt"
 
@@ -153,6 +122,6 @@ def getCalibCorrs():
 
     verts = np.asarray(verts)
 
-    screenverts = verts_to_screen(model, view, proj, verts)
+    screenverts = toNDC(verts_to_screen(model, view, proj, verts), (512,512))
 
-    return np.asarray(verts), np.asarray(screenverts)
+    return np.delete(verts, 3, axis=1), screenverts

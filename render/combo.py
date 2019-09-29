@@ -37,7 +37,6 @@ bck = bpy.data.objects['Background']
 camera = bpy.data.objects['Camera']
 
 
-
 objs = [obj for obj in bpy.context.selected_objects if obj.type == "MESH"]
 
 scenedata = {}
