@@ -16,7 +16,7 @@ def showComboMask(img, data, objname, mode="obj"):
             if key != objname:
                 m = cv2.imread(data["objects"][key]["maskpath"], 0)
                 print(mask.shape)
-                mask = cv2.bitwise_or(mask,m,mask=m)#,mask=None)
+                mask = cv2.bitwise_or(mask,mask,mask=m)#,mask=None)
 
     else: 
         file = data["objects"][objname]["maskpath"]
@@ -25,5 +25,4 @@ def showComboMask(img, data, objname, mode="obj"):
     mask = cv2.resize(mask, (512,512), interpolation=cv2.INTER_AREA)
     masked = cv2.bitwise_and(img,img,mask=mask)
 
-    plt.imshow(masked)
-    plt.show()
+    return masked
