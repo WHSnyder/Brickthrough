@@ -22,7 +22,7 @@ def showComboMask(img, data, objname, mode="obj"):
         file = data["objects"][objname]["maskpath"]
         mask = cv2.imread(file, 0)
     
-    mask = cv2.resize(mask, (512,512), interpolation=cv2.INTER_AREA)
+    mask = cv2.resize(mask, (512,512), interpolation=cv2.INTER_LINEAR)
     masked = cv2.bitwise_and(img,img,mask=mask)
 
     return masked
