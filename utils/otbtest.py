@@ -1,16 +1,16 @@
 import cv2
 
-path = "/Users/will/projects/legoproj/data/pole_single/1472_pole_a.png" 
+path = "/Users/will/projects/legoproj/data/wing_single/2_wing_a.png" 
 
 
 img = cv2.imread( path,0 )#[...,::-1]
 
 
-x1 = 294
-y1 = 387
+x1 = 346
+y1 = 376
 
-x2 = 324
-y2 = 348
+x2 = 385
+y2 = 331
 
 '''
 x1 = 77

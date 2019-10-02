@@ -11,10 +11,10 @@ import os
 from math import degrees
 
 
-name = "pole"
+name = "wing"
 
 write_path = "/Users/will/projects/legoproj/data/{}_single/".format(name)
-num = 10000
+num = 500
 obj = [obji for obji in bpy.context.selected_objects if obji.type == "MESH"][0]
 PI = 3.1415
 
