@@ -3,6 +3,8 @@ import json
 import re
 import math
 
+import matplotlib.pyplot as plt
+
 
 
 expr = re.compile("([-]?[0-9]*\.[0-9]{4})")
@@ -152,6 +154,65 @@ def getFeatureBoxes(width, height, centers):
 		out.append(tuple(np.int(np.asarray([x,y,width,height]))))
 
 	return out
+
+
+
+def toCV2bbox(points):
+
+	out = []
+
+	for point in points:
+		[x,y,w,h] = point
+		p1 = tuple([x,y])
+		p2 = tuple([x + w, y + h]) 
+		out.append([p1,p2])
+
+	return out
+
+
+
+def getTemplate(piece, num, plot=True):
+	
+	temppath = "/Users/will/projects/legoproj/data/{}_single/{}_{}_a.png".format(piece.lower(), num, piece.lower())
+	tempjson = temppath.replace(".png", ".json")
+
+	data = dictFromJson(tempjson)
+	ostuds = get_object_studs(piece)
+
+	img = cv2.imread(temppath)
+
+	model = matrix_from_string(data["objects"][piece+".001"]["modelmat"])
+	view = matrix_from_string(data["Camera"])
+	proj = matrix_from_string(data["Projection"])
+
+
+	screenverts = toNDC(verts_to_screen(model, view, proj, ostuds), (512,512))
+
+	pair = (np.delete(ostuds, 3, axis=1), screenverts)
+
+	if plot:
+
+		w = h = 20
+
+		imgboxes = cv2.copy(img)
+
+		for vert in screenverts:
+
+			x,y = screenverts[0], screenverts[1]
+
+			x1,y1 = x - 10, y - 10
+			x2,y2 = x + 10, y + 10
+
+			cv2.rectangle(imgboxes, (x1,y1), (x2,y2), (0,0,0), 2)
+
+		plt.imshow(imgboxes, cmap="rgb")
+		plt.show()
+
+	return img, pair
+
+
+
+
 
 
 
