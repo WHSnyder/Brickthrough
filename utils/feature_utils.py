@@ -23,6 +23,7 @@ def dictFromJson(filename):
 
 
 
+
 def matrix_from_string(matstring):
 
     matches = expr.findall(matstring)
@@ -32,6 +33,7 @@ def matrix_from_string(matstring):
 
     return nums
     
+
 
 
 def get_object_matrices(filename):
@@ -45,6 +47,7 @@ def get_object_matrices(filename):
 
 
 
+
 def get_object_studs(piece):
 
     piece = piece.replace(".", "_")
@@ -52,6 +55,7 @@ def get_object_studs(piece):
     file = "/Users/will/projects/legoproj/pieces/{}.json".format(piece)
     
     return dictFromJson(file)["studs"]
+
 
 
 
@@ -72,8 +76,11 @@ def verts_to_screen(model, view, frust, verts):
     return screenverts
 
 
+
+
 brickstuds = get_object_studs("Brick")
 wingrstuds = get_object_studs("WingR")
+
 
 
 
@@ -107,12 +114,14 @@ def getStudMask(i):
 
 
 
+
 def toNDC(verts, dims):
     newverts = []
     for vert in verts:
         npcoord = tuple([math.floor(vert[0] * dims[0]), math.floor((1 - vert[1]) * dims[1])])
         newverts.append(npcoord)
     return np.asarray(newverts)
+
 
 
 
@@ -140,6 +149,7 @@ def getCalibCorrs():
 
 
 
+
 def getFeatureBoxes(width, height, centers):
 
 	out = []
@@ -157,6 +167,7 @@ def getFeatureBoxes(width, height, centers):
 
 
 
+
 def toCV2bbox(points):
 
 	out = []
@@ -168,6 +179,7 @@ def toCV2bbox(points):
 		out.append([p1,p2])
 
 	return out
+
 
 
 
@@ -187,12 +199,12 @@ def getTemplate(piece, num, plot=True):
 
 
 	screenverts = toNDC(verts_to_screen(model, view, proj, ostuds), (512,512))
-
-	pair = (np.delete(ostuds, 3, axis=1), screenverts)
+	
 
 	if plot:
 
 		w = h = 20
+		l = w/2
 
 		imgboxes = cv2.copy(img)
 
@@ -200,22 +212,13 @@ def getTemplate(piece, num, plot=True):
 
 			x,y = screenverts[0], screenverts[1]
 
-			x1,y1 = x - 10, y - 10
-			x2,y2 = x + 10, y + 10
+			x1,y1 = x - l, y - l
+			x2,y2 = x + l, y + l
 
 			cv2.rectangle(imgboxes, (x1,y1), (x2,y2), (0,0,0), 2)
 
 		plt.imshow(imgboxes, cmap="rgb")
 		plt.show()
 
-	return img, pair
 
-
-
-
-
-
-
-
-
-
+	return img, np.delete(ostuds, 3, axis=1), screenverts
