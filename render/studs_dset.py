@@ -22,6 +22,9 @@ scene_objs = bpy.data.objects
 flat = scene_objs["Flat"]
 stud = scene_objs["Bump"]
 diag = scene_objs["Diag"]
+camera = bpy.data.objects['Camera']
+bck = bpy.data.objects['Background']
+
 
 objs = [flat, stud, diag]
 
@@ -64,13 +67,13 @@ def setMat(objects, mat):
 
 def genGrid():
 
-	h = random.randint(3,6)
-	w = random.randint(3,6)
+	h = random.randint(2,6)
+	w = random.randint(2,6)
 	u = .32
 
 	sense = random.randint(0,5)
 
-	init = np.asarray([0 - w/2, 0 - h/2, 0])
+	init = u * np.asarray([0 - w/2, 0 - h/2, 0])
 
 	count = 0
 	objects = []
@@ -129,7 +132,7 @@ bpy.context.scene.update()
 
 
 
-num = 100
+num = 3000
 
 
 renders = {}
@@ -139,7 +142,7 @@ renders["list"] = []
 for x in range(num):
 
 
-    camera.location = (random.randint(2,3) * -1 if random.randint(0,1) < 1 else 1, random.randint(2,3) * -1 if random.randint(0,1) < 1 else 1, random.randint(2,3))
+    camera.location = (random.randint(2,4) * -1 if random.randint(0,1) < 1 else 1, random.randint(2,4) * -1 if random.randint(0,1) < 1 else 1, random.randint(2,3))
 
     count, grid = genGrid()
 
@@ -155,6 +158,7 @@ for x in range(num):
 
     scene.render.image_settings.file_format = 'PNG'
     scene.render.filepath = path
+    bpy.ops.render.render(write_still = 1)
 
 
     for obj in grid:
@@ -165,5 +169,6 @@ for x in range(num):
 
 with open(write_path + "{}.json".format("dset"), 'w') as fp:
     json.dump(renders, fp)
+
 
 print("Generated " + str(x+1) + " images in " + str(float(millis() - timestart)/1000.0) + " seconds")

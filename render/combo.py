@@ -42,6 +42,7 @@ objs = [obj for obj in bpy.context.selected_objects if obj.type == "MESH"]
 scenedata = {}
 scenedata["objects"] = {}
 
+
 for obj in objs:
     objdata = {}
     df = obj.data.materials[0].diffuse_color
