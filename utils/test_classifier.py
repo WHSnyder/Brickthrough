@@ -55,7 +55,7 @@ laid = K.function([model.layers[0].input], [model.layers[-4].output])
 
 layer_output = laid([x])[0]
 '''
-int_layer_model = Model(inputs=model.input, outputs=model.layers[-4].output)   #model.get_layer(layer_name).output)
+int_layer_model = Model(inputs=model.input, outputs=model.get_layer("activation_2").output)# model.layers[-4].output)   model.get_layer(layer_name).output)
 #int_output = int_layer_model.predict(data)
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
@@ -96,10 +96,12 @@ while input("Predict?: ") != 'q':
 
     print("Numstuds: {}".format(label))
 
+    print(model.predict(np.reshape(img, (1,128,128,1))) )
+
     pred = int_layer_model.predict(np.reshape(img, (1,128,128,1)))
     print(pred.shape)
     pred = pred[0,:,:,0]
-    pred = np.reshape(pred, (54,54))
+    pred = np.reshape(pred, (55,55))
 
     print("Pred sum: {}".format(np.sum(pred)))
 
@@ -107,7 +109,7 @@ while input("Predict?: ") != 'q':
     plt.imshow(img, interpolation='nearest', cmap='gray')
 
     fig.add_subplot(2, 2, 3)
-    plt.imshow(pred, interpolation='nearest', cmap='viridis')
+    plt.imshow(pred, interpolation='nearest', cmap='gray')
     #plt.matshow(pred, interpolation='nearest', cmap='viridis')
     plt.show()
     

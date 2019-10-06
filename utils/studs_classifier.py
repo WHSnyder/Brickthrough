@@ -55,6 +55,7 @@ for i in range(0,num):
 arr = np.array(training_images)
 labels = np.array(labels)
 
+
 print("Consumed.")
 
 
@@ -82,6 +83,12 @@ trainset = trainset/255.0
 trainlabels = labels[:split]
 testlabels = labels[split:]
 
+trainlabels = to_categorical(trainlabels, num_classes=37)
+testlabels = to_categorical(testlabels, num_classes=37)
+
+print(trainlabels[0])
+#sys.exit()
+
 
 print(trainset.shape)
 
@@ -99,37 +106,43 @@ model.add(Conv2D(32, (5, 5), activation='relu'))
 
 model.add(MaxPooling2D(pool_size=(2, 2)))
 
-model.add(Conv2D(15, (3, 3), dilation_rate=(3,3)))
+model.add(Conv2D(15, (4, 4)))
 model.add(BatchNormalization())
 model.add(Activation('relu'))
-'''
-model.add(Conv2D(4, (3, 3)))
+
+
+model.add(Conv2D(1, (3, 3)))
 model.add(BatchNormalization())
 model.add(Activation('relu'))
-'''
-model.add(MaxPooling2D((2,2), padding = 'same'))
-model.add(MaxPooling2D((2,2), padding = 'same'))
 
+model.add(Dropout(0.25))
 
-model.add(keras.layers.Conv2DTranspose(10, (2,2), strides=(2,2), padding='same', activation='relu'))
-model.add(keras.layers.Conv2DTranspose(5, (2,2), strides=(2,2), padding='same', activation='relu'))
-
-model.add(Conv2D(1, (3, 3), activation="relu"))
-
-#model.add(Dropout(0.25))
 model.add(Flatten())
 
-model.add(Dense(128, activation='linear'))
-#model.add(Dense(30, activation='relu'))
-model.add(Dense(1, activation='linear'))
+
+model.add(Dense(80)) 
+model.add(BatchNormalization())
+model.add(Activation('relu')) 
+
+model.add(Dropout(0.5)) 
+
+model.add(Dense(60)) 
+model.add(BatchNormalization())
+model.add(Activation('relu'))
+
+model.add(Dense(37))
+model.add(Activation('softmax'))
 
 
-model.compile(optimizer='adam', loss='mse', metrics=['mse'])
+
+#model.compile(optimizer='adam', loss='mse', metrics=['mse'])
+
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
 print(model.summary())
 
 
-history = model.fit(trainset, trainlabels, batch_size=30, verbose=1, epochs=2, validation_split=0.5)
+history = model.fit(trainset, trainlabels, batch_size=60, verbose=1, epochs=3, validation_split=0.2)
 
 #history = model.fit(imgsarr[0:999], studimgs[0:999], epochs=2, batch_size=15,  verbose=1, validation_split=0.6)
 
