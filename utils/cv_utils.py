@@ -8,8 +8,6 @@ from matplotlib import pyplot as plt
 
 
 
-
-
 def getContourMaxArea(contours):
 
     maxi, maxa = 0,0
@@ -26,6 +24,8 @@ def getContourMaxArea(contours):
 
 def listContourChildren(index, hierarchy, contours, minArea = 4):
 
+    if (hierarchy is None):
+        return []
     hierarchy = hierarchy[0]
     nexti = hierarchy[index][2]
     #print(hierarchy)
@@ -44,7 +44,7 @@ def listContourChildren(index, hierarchy, contours, minArea = 4):
 
 
 
-def showComboMask(img, data, objname, mode="obj"):
+def getComboMask(img, data, objname, mode="obj", show=False):
     
     if mode == "allbut":
         mask = 255 * np.ones((64,64))
@@ -61,16 +61,22 @@ def showComboMask(img, data, objname, mode="obj"):
     mask = cv2.resize(mask, (512,512), interpolation=cv2.INTER_LINEAR)
     masked = cv2.bitwise_and(img,img,mask=mask)
 
+    if show:
+        plt.imshow(masked)
+        plt.show()
+
     return masked
 
 
 def getCentroids(cnts):
+
     r = []
     for cnt in cnts:
         M = cv2.moments(cnt)
         cX = int(M["m10"] / M["m00"])
         cY = int(M["m01"] / M["m00"])
         r.append((cX,cY))
+
     return r
 
 
@@ -105,22 +111,23 @@ def getRange(hist, index):
     return lower, higher
 
 
-def drawStuds(img):
+
+def getStuds(img, show=False):
 
     contours, hierarchy = cv2.findContours(img.astype(np.dtype('uint8')), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     index, cnt = getContourMaxArea(contours)
 
     children = listContourChildren(index, hierarchy, contours)
-
-    rgb = cv2.cvtColor(img.astype(np.dtype("float32")), cv2.COLOR_GRAY2RGB)
-
     roids = getCentroids(children)
 
-    for roid in roids:
-        cv2.circle(rgb, roid, 8, (0, 100, 160), 2)
+    if show: 
+        rgb = cv2.cvtColor(img.astype(np.dtype("float32")), cv2.COLOR_GRAY2RGB)
 
-    plt.imshow(rgb/255)
-    plt.show()
+        for roid in roids:
+            cv2.circle(rgb, roid, 8, (0, 100, 160), 2)
+   
+        plt.imshow(rgb/255)
+        plt.show()
 
     return roids
 
@@ -129,11 +136,7 @@ def drawStuds(img):
 
 
 
-
-
-
-
-def showSurface(img,rank,buckets=35,show=False):
+def getSurface(img,rank,buckets=35,show=False):
 
     img1 = cv2.bilateralFilter(img, 2, 900, 100)
 
@@ -146,28 +149,25 @@ def showSurface(img,rank,buckets=35,show=False):
     lower = int(lower/buckets * 254)
     higher = int(higher/buckets * 254)
 
-    print("Low:  {}   High:  {}".format(lower,higher))
-
-    kernel = np.ones((2,2),np.uint8)
-
     threshed = cv2.inRange(img1, lower, higher)
-
     num, output, stats, centroids = cv2.connectedComponentsWithStats(threshed, connectivity=8)
 
     num -= 1
     sizes = stats[1:, -1];
-
     min_size = 20
 
     img2 = np.zeros((output.shape))
-    print(img2.shape)
+
 
     #for every component in the image, you keep it only if it's above min_size
     for i in range(0, num):
         if sizes[i] >= min_size:
-            img2[output == i + 1] = 255  
+            img2[output == i + 1] = 255 
+
+    img2 = cv2.medianBlur(img2.astype(np.uint8), 3)
 
     if show:
+
         plt.imshow(img2, cmap="gray")
         plt.show()
 
@@ -176,10 +176,8 @@ def showSurface(img,rank,buckets=35,show=False):
 
 
 
-
 def testForHoles(surf, minholes=2, show=False):
     #surf = cv2.bilateralFilter(surf, 2, 900, 100)
-
 
     num, output, stats, centroids = cv2.connectedComponentsWithStats(surf, connectivity=8)
 
@@ -199,8 +197,13 @@ def testForHoles(surf, minholes=2, show=False):
 
     img2[output == maxone + 1] = 255 
 
-    contours, hierarchy = cv2.findContours(img2.astype(np.dtype('uint8')), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    #contours, hierarchy = cv2.findContours(img2.astype(np.dtype('uint8')), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    #maxi, maxa = getContourMaxArea(contours)
 
+    studs = getStuds(img2)
+
+
+    '''
     length = 0
     theone = None
     ind = 0
@@ -215,10 +218,38 @@ def testForHoles(surf, minholes=2, show=False):
 
     img3 = cv2.cvtColor(img2.astype(np.dtype("float32")), cv2.COLOR_GRAY2RGB)
     cv2.drawContours(img3, [theone], 0, (0,100,255), 2)
+    '''
 
+    '''
+    if show:
+        plt.imshow(img2/255)#,cmap="gray")
+        plt.show()
+    '''
+
+
+    return img2, studs
+
+
+
+
+def getStuddedSurface(img, show=False):
+
+    count = 0
+    outimg, outlist = None,[]
+
+    for i in range(0,3):
+        surf = getSurface(img, i)
+        studsimg, studslist = testForHoles(surf)
+
+        if len(studslist) > count:
+            outimg = studsimg
+            outlist = studslist
+            count = len(studslist)
 
     if show:
-        plt.imshow(img3/255)#,cmap="gray")
+        plt.imshow(outimg,cmap="gray")
         plt.show()
 
-    return img2
+    return outimg,outlist
+
+
