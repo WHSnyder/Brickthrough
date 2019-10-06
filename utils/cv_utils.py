@@ -7,6 +7,9 @@ from matplotlib import pyplot as plt
 
 
 
+
+
+
 def getContourMaxArea(contours):
 
     maxi, maxa = 0,0
@@ -61,6 +64,14 @@ def showComboMask(img, data, objname, mode="obj"):
     return masked
 
 
+def getCentroids(cnts):
+    r = []
+    for cnt in cnts:
+        M = cv2.moments(cnt)
+        cX = int(M["m10"] / M["m00"])
+        cY = int(M["m01"] / M["m00"])
+        r.append((cX,cY))
+    return r
 
 
 
@@ -103,21 +114,15 @@ def drawStuds(img):
 
     rgb = cv2.cvtColor(img.astype(np.dtype("float32")), cv2.COLOR_GRAY2RGB)
 
-    for child in children:
-        M = cv2.moments(child)
-        cX = int(M["m10"] / M["m00"])
-        cY = int(M["m01"] / M["m00"])
+    roids = getCentroids(children)
 
-        cv2.circle(rgb, (cX,cY), 8, (0, 100, 160), 2)
+    for roid in roids:
+        cv2.circle(rgb, roid, 8, (0, 100, 160), 2)
 
-    plt.imshow(rgb)
+    plt.imshow(rgb/255)
     plt.show()
 
-    return None
-
-
-
-
+    return roids
 
 
 
@@ -166,13 +171,15 @@ def showSurface(img,rank,buckets=35,show=False):
         plt.imshow(img2, cmap="gray")
         plt.show()
 
-    return threshed
+    return img2.astype(np.dtype("uint8"))
 
 
 
 
 
 def testForHoles(surf, minholes=2, show=False):
+    #surf = cv2.bilateralFilter(surf, 2, 900, 100)
+
 
     num, output, stats, centroids = cv2.connectedComponentsWithStats(surf, connectivity=8)
 
@@ -206,12 +213,12 @@ def testForHoles(surf, minholes=2, show=False):
 
     hull = cv2.convexHull(theone)
 
-    #img3 = cv2.cvtColor(img2.astype(np.dtype("float32")), cv2.COLOR_GRAY2RGB)
-    #cv2.drawContours(img2, [hull], 0, (255,0,0), 2)
+    img3 = cv2.cvtColor(img2.astype(np.dtype("float32")), cv2.COLOR_GRAY2RGB)
+    cv2.drawContours(img3, [theone], 0, (0,100,255), 2)
 
 
     if show:
-        plt.imshow(img2,cmap="gray")
+        plt.imshow(img3/255)#,cmap="gray")
         plt.show()
 
     return img2
