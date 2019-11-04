@@ -5,7 +5,7 @@ import math
 
 import matplotlib.pyplot as plt
 
-
+hf="/home"
 
 expr = re.compile("([-]?[0-9]*\.[0-9]{4})")
 dim = 512
@@ -52,7 +52,7 @@ def get_object_studs(piece):
 
     piece = piece.replace(".", "_")
     piece = piece.split("_")[0]
-    file = "/Users/will/projects/legoproj/pieces/{}.json".format(piece)
+    file = hf+"/will/projects/legoproj/pieces/{}.json".format(piece)
     
     return dictFromJson(file)["studs"]
 
@@ -126,7 +126,7 @@ def toNDC(verts, dims):
 
 
 def getCalibCorrs():
-    path = "/Users/will/projects/legoproj/utils/calib_data/calibdata.txt"
+    path = hf+"/will/projects/legoproj/utils/calib_data/calibdata.txt"
 
     with open(path) as json_file:
         data = json.load(json_file)
@@ -185,7 +185,7 @@ def toCV2bbox(points):
 
 def getTemplate(piece, num, plot=True):
 	
-	temppath = "/Users/will/projects/legoproj/data/{}_single/{}_{}_a.png".format(piece.lower(), num, piece.lower())
+	temppath = hf+"/will/projects/legoproj/data/{}_single/{}_{}_a.png".format(piece.lower(), num, piece.lower())
 	tempjson = temppath.replace(".png", ".json")
 
 	data = dictFromJson(tempjson)
