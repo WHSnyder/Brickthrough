@@ -26,10 +26,10 @@ def listContourChildren(index, hierarchy, contours, minArea = 4):
 
     if (hierarchy is None):
         return []
+
     hierarchy = hierarchy[0]
     nexti = hierarchy[index][2]
-    #print(hierarchy)
-    #print(nexti)
+    
     holes = []
     
     while nexti != -1:
@@ -56,6 +56,7 @@ def getComboMask(img, data, objname, mode="obj", show=False):
 
     else: 
         file = data["objects"][objname]["maskpath"]
+        file=file.replace("/Users","/home")
         mask = cv2.imread(file, 0)
     
     mask = cv2.resize(mask, (512,512), interpolation=cv2.INTER_LINEAR)
@@ -78,7 +79,6 @@ def getCentroids(cnts):
         r.append((cX,cY))
 
     return r
-
 
 
 def sortHist(hist):
@@ -249,6 +249,10 @@ def getStuddedSurface(img, show=False):
     if show:
         plt.imshow(outimg,cmap="gray")
         plt.show()
+
+    kernel = np.ones((1,1), np.uint8) 
+    outimg = cv2.dilate(outimg, kernel, iterations=1) 
+
 
     return outimg,outlist
 

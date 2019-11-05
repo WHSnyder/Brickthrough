@@ -163,8 +163,8 @@ def display_instances(image, boxes, masks, class_ids, class_names,
             p = Polygon(verts, facecolor="none", edgecolor=color)
             ax.add_patch(p)
     ax.imshow(masked_image.astype(np.uint8))
-    #if auto_show:
-    plt.show(block=True)
+    if auto_show:
+        plt.show()
 
 
 def display_differences(image,
