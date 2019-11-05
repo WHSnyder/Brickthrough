@@ -33,7 +33,7 @@ if split <= 0 or split >= 1:
 
 
 
-dset = fu.dictFromJson("/Users/will/projects/legoproj/data/studs/dset.json")
+dset = fu.dictFromJson("/home/will/projects/legoproj/data/studs/dset.json")
 dset = dset["list"]
 
 num = int(len(dset)*.8)
@@ -47,7 +47,10 @@ print("Setting up...")
 for i in range(0,num):
     print("Reading image {}".format(i))
 
-    img = cv2.imread(dset[i][0],cv2.IMREAD_GRAYSCALE)
+    path = dset[i][0]
+    path = path.replace("Users","home")
+
+    img = cv2.imread(path,cv2.IMREAD_GRAYSCALE)
     img = cv2.resize(img, (128,128))
     training_images.append(img)
     labels[i] = int(dset[i][2])
@@ -58,10 +61,6 @@ labels = np.array(labels)
 
 print("Consumed.")
 
-
-
-import tensorflow as tf
-
 import keras
 from keras.datasets import mnist
 from keras.models import Sequential
@@ -69,6 +68,19 @@ from keras.layers import Dense, Dropout, Flatten
 from keras.layers import Conv2D, MaxPooling2D
 from keras.layers import BatchNormalization, Activation
 from keras.utils import to_categorical
+
+
+from keras.backend.tensorflow_backend import set_session
+
+import tensorflow as tf
+
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True  # dynamically grow the memory used on the GPU
+config.log_device_placement = True  # to log device placement (on which device the operation ran)
+sess = tf.Session(config=config)
+set_session(sess)
+
+
 
 
 trainset = arr[:split]

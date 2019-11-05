@@ -35,8 +35,8 @@ import feature_utils as fu
 
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
-datadir = '/Users/will/projects/legoproj/data_oneofeach/studs_oneofeach/'
-modeldir = '/Users/will/projects/legoproj/utils/'
+datadir = '/home/will/projects/legoproj/data/studs_oneofeach/'
+modeldir = '/home/will/projects/legoproj/utils/'
 
 random.seed(0)
 iters = 1000
