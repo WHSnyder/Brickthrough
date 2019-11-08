@@ -5,7 +5,7 @@ import math
 
 import matplotlib.pyplot as plt
 
-
+hf="/home"
 
 expr = re.compile("([-]?[0-9]*\.[0-9]{4})")
 dim = 512
@@ -52,7 +52,7 @@ def get_object_studs(piece):
 
     piece = piece.replace(".", "_")
     piece = piece.split("_")[0]
-    file = "/Users/will/projects/legoproj/pieces/{}.json".format(piece)
+    file = hf+"/will/projects/legoproj/pieces/{}.json".format(piece)
     
     return dictFromJson(file)["studs"]
 
@@ -126,7 +126,7 @@ def toNDC(verts, dims):
 
 
 def getCalibCorrs():
-    path = "/Users/will/projects/legoproj/utils/calib_data/calibdata.txt"
+    path = hf+"/will/projects/legoproj/utils/calib_data/calibdata.txt"
 
     with open(path) as json_file:
         data = json.load(json_file)
@@ -152,88 +152,73 @@ def getCalibCorrs():
 
 def getFeatureBoxes(width, height, centers):
 
-    out = []
+	out = []
 
-    for center in centers:
-        x = center[1]
-        y = center[0]
+	for center in centers:
+		x = center[1]
+		y = center[0]
 
-        x -= width/2
-        y -= height/2
+		x -= width/2
+		y -= height/2
 
-        out.append(tuple(np.int(np.asarray([x,y,width,height]))))
+		out.append(tuple(np.int(np.asarray([x,y,width,height]))))
 
-    return out
+	return out
 
 
 
 
 def toCV2bbox(points):
 
-    out = []
+	out = []
 
-    for point in points:
-        [x,y,w,h] = point
-        p1 = tuple([x,y])
-        p2 = tuple([x + w, y + h]) 
-        out.append([p1,p2])
+	for point in points:
+		[x,y,w,h] = point
+		p1 = tuple([x,y])
+		p2 = tuple([x + w, y + h]) 
+		out.append([p1,p2])
 
-    return out
-
-
-
-
-def getObjectData(jsonpath):
-    data = dictFromJson(jsonpath)
-    model = matrix_from_string(data["objects"]["Pole"+".001"]["modelmat"])
-    view = matrix_from_string(data["Camera"])
-    proj = matrix_from_string(data["Projection"])
-
-    return [model,view,proj]
-
-
-def projectPoint(coord,mats,dims=(128,128)):
-    return toNDC(verts_to_screen(mats[0], mats[1], mats[2], [coord]), dims)    
+	return out
 
 
 
 
 def getTemplate(piece, num, plot=True):
-    
-    temppath = "/Users/will/projects/legoproj/data/{}_single/{}_{}_a.png".format(piece.lower(), num, piece.lower())
-    tempjson = temppath.replace(".png", ".json")
+	
+	temppath = hf+"/will/projects/legoproj/data/{}_single/{}_{}_a.png".format(piece.lower(), num, piece.lower())
+	tempjson = temppath.replace(".png", ".json")
 
-    data = dictFromJson(tempjson)
-    ostuds = get_object_studs(piece)
+	data = dictFromJson(tempjson)
+	ostuds = get_object_studs(piece)
 
-    img = cv2.imread(temppath)
+	img = cv2.imread(temppath)
 
-    model = matrix_from_string(data["objects"][piece+".001"]["modelmat"])
-    view = matrix_from_string(data["Camera"])
-    proj = matrix_from_string(data["Projection"])
-
-
-    screenverts = toNDC(verts_to_screen(model, view, proj, ostuds), (512,512))
-    
-
-    if plot:
-
-        w = h = 20
-        l = w/2
-
-        imgboxes = cv2.copy(img)
-
-        for vert in screenverts:
-
-            x,y = screenverts[0], screenverts[1]
-
-            x1,y1 = x - l, y - l
-            x2,y2 = x + l, y + l
-
-            cv2.rectangle(imgboxes, (x1,y1), (x2,y2), (0,0,0), 2)
-
-        plt.imshow(imgboxes, cmap="rgb")
-        plt.show()
+	model = matrix_from_string(data["objects"][piece+".001"]["modelmat"])
+	view = matrix_from_string(data["Camera"])
+	proj = matrix_from_string(data["Projection"])
 
 
-    return img, np.delete(ostuds, 3, axis=1), screenverts
+	screenverts = toNDC(verts_to_screen(model, view, proj, ostuds), (512,512))
+	
+
+	if plot:
+
+		w = h = 20
+		l = w/2
+
+		imgboxes = cv2.copy(img)
+
+		for vert in screenverts:
+
+			x,y = screenverts[0], screenverts[1]
+
+			x1,y1 = x - l, y - l
+			x2,y2 = x + l, y + l
+
+			cv2.rectangle(imgboxes, (x1,y1), (x2,y2), (0,0,0), 2)
+
+		plt.imshow(imgboxes, cmap="rgb")
+		plt.show()
+
+
+	return img, np.delete(ostuds, 3, axis=1), screenverts

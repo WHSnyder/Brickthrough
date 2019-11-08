@@ -56,6 +56,7 @@ def getComboMask(img, data, objname, mode="obj", show=False):
 
     else: 
         file = data["objects"][objname]["maskpath"]
+        file=file.replace("/Users","/home")
         mask = cv2.imread(file, 0)
     
     mask = cv2.resize(mask, (512,512), interpolation=cv2.INTER_LINEAR)
