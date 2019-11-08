@@ -17,3 +17,4 @@ data/**
 pieces/**
 .ipynb_checkpoints/**
 qatm/**
+/downloads/**
