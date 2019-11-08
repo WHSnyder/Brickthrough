@@ -11,7 +11,6 @@ keypointnet/**
 piecetypes/**
 combo_renders/**
 nets/**
-augdatatest/**
 unet/**
 data/**
 pieces/**
