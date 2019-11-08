@@ -9,6 +9,17 @@ import os
 from math import degrees
 import colorsys
 
+
+runs = 500
+classes = ["Wing","Pole","Brick","Engine","Slope"]
+
+def getClass(name):
+    for c in classes:
+        if c in name:
+            return c
+
+
+
 print("Begining.....\n\n\n")
 
 millis = lambda: int(round(time.time() * 1000))
@@ -119,7 +130,7 @@ endlist = len(objs)
 
 
 
-
+'''
 
 i = 0
 
@@ -155,31 +166,33 @@ if not HSV:
                 scenedata["objects"][obj.name]["maskcolor"] = color[0:3]
 
                 i+=1
+'''
 
-else:
-    for i,obj in enumerate(objs):
+for i,obj in enumerate(objs):
 
-        obj.active_material_index = 0
-        hu = (i/endlist)
+    obj.active_material_index = 0
+    hue = (i/endlist)
 
-        if obj.name not in bpy.data.materials:
-            objmat = bpy.data.materials["WhiteShadeless"].copy()
-        else:
-            objmat = bpy.data.materials[obj.name]
+    if obj.name not in bpy.data.materials:
+        objmat = bpy.data.materials["WhiteShadeless"].copy()
+    else:
+        objmat = bpy.data.materials[obj.name]
 
-        objmat.use_nodes = True
-        objmat.name = obj.name
+    objmat.use_nodes = True
+    objmat.name = obj.name
 
-        if objmat.name not in obj.data.materials:
-            obj.data.materials.append(objmat)
+    if objmat.name not in obj.data.materials:
+        obj.data.materials.append(objmat)
 
-        color = colorsys.hsv_to_rgb(hu,.8,.8)
-        color = [color[0],color[1],color[2],1.0]
+    color = colorsys.hsv_to_rgb(hue,.8,.8)
+    color = [color[0],color[1],color[2],1.0]
 
-        objmat.node_tree.nodes["Emission"].inputs["Color"].default_value = color
+    objmat.node_tree.nodes["Emission"].inputs["Color"].default_value = color
 
-        objmasks[obj.name] = objmat
-        scenedata["objects"][obj.name]["maskhue"] = hu
+    objmasks[obj.name] = objmat
+    scenedata["objects"][obj.name]["maskhue"] = hue
+    scenedata["objects"][obj.name]["class"] = getClass(obj.name)
+
 
 scenedata["renders"] = []
 
@@ -272,7 +285,7 @@ def getMatSubset(percent):
             res.append(mat)
 
     if len(res) == 0:
-    	return [mats[random.randint(0,nummats-1)]]
+        return [mats[random.randint(0,nummats-1)]]
     return res
 
 
@@ -307,11 +320,13 @@ def getObjSubset(percent,matchoices):
 world = bpy.data.worlds["World.001"]
 world.use_nodes = True
 bg = world.node_tree.nodes["Background"]
+renderer = bpy.data.scenes["LegoTest"].cycles
 
 
-num = 50
 
-for x in range(num):
+for x in range(runs):
+
+    renderer.samples = random.randint(3,10)
 
     strength = random.randint(1,6)*.2
     bg.inputs[1].default_value = strength
@@ -347,7 +362,7 @@ for x in range(num):
 with open(write_path + "data.json", 'w') as fp:
     json.dump(scenedata,fp)
 
-print("Generated " + str(x+1) + " images in " + str(float(millis() - timestart)/1000.0) + " seconds")
+print("Generated " + str(runs) + " images in " + str(float(millis() - timestart)/1000.0) + " seconds")
 
 for obj in objs:
     obj.hide = False
