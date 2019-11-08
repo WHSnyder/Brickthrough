@@ -56,7 +56,7 @@ nodes = tablemat.node_tree.nodes
 imgnode = nodes.get("Image Texture")
 
 def changeTable():
-    imgnode.image = imgs[random.randint(0,70)]
+    imgnode.image = imgs[random.randint(0,80)]
 
 #table = scene_objs["Table"]
 
@@ -66,9 +66,10 @@ red = [1.0,1.0,1.0,1.0]
 blue = [.1,.1,1.0,1.0]
 black = [.2,.2,.2,1.0]
 dirty = [.2,.3,.2,1.0]
+dark=[0.0,0.0,0.0,1.0]
 
-matnames = ["gray","lgray","red","blue","black","dirty"]
-matcolors = [gray, lgray, red, blue, black, dirty]
+matnames = ["gray","lgray","red","blue","black","dirty","dark"]
+matcolors = [gray, lgray, red, blue, black, dirty, dark]
 mats = []
 
 for i in range(0,len(matnames)):
@@ -116,7 +117,7 @@ incs2 = [1.0, .0, .5, 0.4]
 endlist = len(objs)
 
 
-unit = 255/endlist
+unit = 179/endlist
 
 
 
@@ -172,13 +173,13 @@ else:
         if objmat.name not in obj.data.materials:
             obj.data.materials.append(objmat)
 
-        color = colorsys.hsv_to_rgb(unit*i/255,.8,.7)
+        color = colorsys.hsv_to_rgb(unit*(i+1)/179,.8,.7)
         color = [color[0],color[1],color[2],1.0]
 
         objmat.node_tree.nodes["Emission"].inputs["Color"].default_value = color
 
         objmasks[obj.name] = objmat
-        scenedata["objects"][obj.name]["maskhue"] = unit*i/255
+        scenedata["objects"][obj.name]["maskhue"] = unit*(i+1)/179
 
 scenedata["renders"] = []
 
@@ -263,16 +264,15 @@ def getMatSubset(percent):
     nummats = len(mats)
     choices = int(round(percent*nummats))
  
-    if choices == 0:
-    	return [mats[random.randint(0,nummats-1)]]
- 
-    res = [bpy.data.materials["dirty"]]
+    res = []
  
     for mat in mats:
         des = True if random.randint(0,nummats) <= choices else False
         if des:
             res.append(mat)
 
+    if len(res) == 0:
+    	return [mats[random.randint(0,nummats-1)]]
     return res
 
 
