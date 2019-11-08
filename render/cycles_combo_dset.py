@@ -117,7 +117,6 @@ incs2 = [1.0, .0, .5, 0.4]
 endlist = len(objs)
 
 
-unit = 179/endlist
 
 
 
@@ -161,6 +160,7 @@ else:
     for i,obj in enumerate(objs):
 
         obj.active_material_index = 0
+        hu = (i/endlist)
 
         if obj.name not in bpy.data.materials:
             objmat = bpy.data.materials["WhiteShadeless"].copy()
@@ -173,13 +173,13 @@ else:
         if objmat.name not in obj.data.materials:
             obj.data.materials.append(objmat)
 
-        color = colorsys.hsv_to_rgb(unit*(i+1)/179,.8,.7)
+        color = colorsys.hsv_to_rgb(hu,.8,.8)
         color = [color[0],color[1],color[2],1.0]
 
         objmat.node_tree.nodes["Emission"].inputs["Color"].default_value = color
 
         objmasks[obj.name] = objmat
-        scenedata["objects"][obj.name]["maskhue"] = unit*(i+1)/179
+        scenedata["objects"][obj.name]["maskhue"] = hu
 
 scenedata["renders"] = []
 
