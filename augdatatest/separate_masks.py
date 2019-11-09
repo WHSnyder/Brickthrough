@@ -38,12 +38,14 @@ for obj in data["objects"]:
 
 
 
-def separate(imgpath,maskpath,entry):
+def separate(imgpath,maskpath,entry,ind):
 
     class_counts = {"Engine":0,"Wing":0,"Brick":0,"Pole":0}
     files = {}
     files["images"] = []
     files["masks"] = []
+    kernel = np.ones((2,2), np.uint8) 
+
 
     img = cv2.imread(imgpath)
 
@@ -74,12 +76,16 @@ def separate(imgpath,maskpath,entry):
 
         masks+=1
 
+        threshed = cv2.medianBlur(threshed.astype(np.uint8), 3)
+        threshed = cv2.dilate(threshed, kernel, iterations=1) 
+
         piece = huedict[hu]
         piecetype = data["objects"][piece]["class"]
         class_counts[piecetype]+=1
 
-        threshpath = os.path.join(write_path,"{}_mask_{}_{}.png".format(entry["x"],piecetype,class_counts[piecetype]))
-        files["masks"].append(threshpath)
+        filename = "{}_mask_{}_{}.png".format(ind,piecetype,class_counts[piecetype])
+        threshpath = os.path.join(write_path,filename)
+        files["masks"].append(filename)
 
         cv2.imwrite(threshpath,threshed)
 
@@ -87,7 +93,7 @@ def separate(imgpath,maskpath,entry):
         sepspath = os.path.join(write_path,entry["r"])
         cv2.imwrite(sepspath,img)
 
-        files["images"].append(sepspath)
+        files["images"].append(entry["r"])
 
         return files
 
@@ -108,7 +114,7 @@ else:
         imgpath = os.path.join(args.path,entry["r"]) 
         maskpath = os.path.join(args.path,entry["m"])
 
-        links = separate(imgpath,maskpath,entry)
+        links = separate(imgpath,maskpath,entry,i)
 
         if links is not None:
             newdata.append(links)

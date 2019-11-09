@@ -10,7 +10,11 @@ from math import degrees
 import colorsys
 
 
-runs = 500
+
+
+
+
+runs = 800
 classes = ["Wing","Pole","Brick","Engine","Slope"]
 
 def getClass(name):
@@ -33,10 +37,10 @@ HSV = True
 
 mode = "test"
 num = 0
-write_path = "/home/will/projects/legoproj/data/{}_combodset_{}/".format(mode,num)
+write_path = "/home/will/projects/legoproj/data/{}_normalsdset_{}/".format(mode,num)
 while os.path.exists(write_path):
     num += 1
-    write_path = "/home/will/projects/legoproj/data/{}_combodset_{}/".format(mode,num)
+    write_path = "/home/will/projects/legoproj/data/{}_normalsdset_{}/".format(mode,num)
 os.mkdir(write_path)
 
 
@@ -47,7 +51,6 @@ bpy.context.scene.render.engine = 'CYCLES'
 
 scene = bpy.context.scene
 scene_objs = bpy.data.objects
-
 camera = bpy.data.objects['Camera']
 
 
@@ -98,6 +101,7 @@ for i in range(0,len(matnames)):
     mats.append(mat)
 
 
+normalmat = bpy.data.materials["Normz"]
 
 
 objmasks = {}
@@ -130,44 +134,6 @@ endlist = len(objs)
 
 
 
-'''
-
-i = 0
-
-if not HSV:
-    for r in incs0:
-        if i == endlist:
-            break;
-        for g in incs1:
-            if i == endlist:
-                break;
-            for b in incs2:
-                if i == endlist:
-                    break;
-
-                obj = objs[i]
-                obj.active_material_index = 0
-
-                if obj.name not in bpy.data.materials:
-                    objmat = bpy.data.materials["WhiteShadeless"].copy()
-                else:
-                    objmat = bpy.data.materials[obj.name]
-
-                objmat.use_nodes = True
-                objmat.name = obj.name
-
-                if objmat.name not in obj.data.materials:
-                    obj.data.materials.append(objmat)
-
-                color = [r,g,b,1.0]
-                objmat.node_tree.nodes["Emission"].inputs["Color"].default_value = color
-
-                objmasks[obj.name] = objmat
-                scenedata["objects"][obj.name]["maskcolor"] = color[0:3]
-
-                i+=1
-'''
-
 for i,obj in enumerate(objs):
 
     obj.active_material_index = 0
@@ -198,7 +164,6 @@ scenedata["renders"] = []
 
 
 
-
 black_shadeless = bpy.data.materials["BlackShadeless"]
 bck = bpy.data.objects['Background']
 bck.data.materials[0] = black_shadeless
@@ -206,10 +171,11 @@ bck.active_material_index = 0
 
 
 
-
 scene.render.resolution_x = 512
 scene.render.resolution_y = 512
 scene.render.resolution_percentage = 100
+scene.render.image_settings.file_format = 'PNG'
+
 bpy.context.scene.update()
 projection_matrix = camera.calc_matrix_camera(
         bpy.context.scene.render.resolution_x,
@@ -218,13 +184,8 @@ bpy.context.scene.update()
 scenedata["projection"] = str(projection_matrix)
 
 
-
 #Masking 
-def shadeMasks(objects, path):
-
-    scene.render.resolution_x = 512
-    scene.render.resolution_y = 512
-    scene.render.resolution_percentage = 100                
+def shadeMasks(objects, path):               
 
     bck.hide_render = False
     bck.hide = False
@@ -239,6 +200,18 @@ def shadeMasks(objects, path):
     bpy.ops.render.render(write_still = 1)
 
 
+#Normals
+def shadeNormals(objects,path):
+
+    for obj in objects:
+        obj.data.materials[0] = normalmat
+
+    bpy.context.scene.update()
+            
+    scene.render.filepath = path
+    bpy.ops.render.render(write_still = 1)
+
+
 #Main render
 def shade(x,subset):
 
@@ -246,26 +219,24 @@ def shade(x,subset):
 
     renderfile = "{}_a.png".format(x)
     maskfile = "mask_{}.png".format(x)
+    normalsfile = "normals_{}.png".format(x)
 
     render_path = write_path + renderfile
     mask_path = write_path + maskfile
+    normalspath = write_path + normalsfile
 
-    scenedata["renders"].append({"x":x, "r":renderfile, "m":maskfile, "c": str(camera.matrix_world.copy().inverted())})
-
-    scene.render.resolution_x = 512
-    scene.render.resolution_y = 512
-    scene.render.resolution_percentage = 100
+    scenedata["renders"].append({"x":x, "r":renderfile, "m":maskfile, "n":normalsfile, "c": str(camera.matrix_world.copy().inverted())})
 
     bck.hide_render = True
     bck.hide = True
 
     bpy.context.scene.update()
 
-    scene.render.image_settings.file_format = 'PNG'
     scene.render.filepath = render_path
     bpy.ops.render.render(write_still = 1)
 
     shadeMasks(subset,mask_path)
+    shadeNormals(subset,normalspath)
 
 
 
@@ -326,19 +297,19 @@ renderer = bpy.data.scenes["LegoTest"].cycles
 
 for x in range(runs):
 
-    renderer.samples = random.randint(3,10)
+    renderer.samples = random.randint(4,5)
 
-    strength = random.randint(1,6)*.2
+    strength = random.randint(0,9)*.2
     bg.inputs[1].default_value = strength
 
     #select subset
-    objslice = random.randint(1,8)*.05
-    matslice = random.randint(1,8)*.1
+    objslice = random.randint(1,13)*.05
+    matslice = random.randint(1,5)*.1
 
     matz = getMatSubset(matslice)
     objectz = getObjSubset(objslice,matz)
 
-    camera.location = (random.randint(3,8) * -1 if random.randint(0,1) < 1 else 1, random.randint(3,8) * -1 if random.randint(0,1) < 1 else 1, random.randint(3,8))
+    camera.location = (random.randint(3,10) * -1 if random.randint(0,1) < 1 else 1, random.randint(3,10) * -1 if random.randint(0,1) < 1 else 1, random.randint(2,10))
 
     bpy.context.scene.update()
 
