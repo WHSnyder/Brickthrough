@@ -1,10 +1,5 @@
-/pose_basic_train/*
-/.DS_Store
-/.ipynb_checkpoints/
+.DS_Store
 nets/**
 unet/**
 data/**
-pieces/**
 .ipynb_checkpoints/**
-qatm/**
-/downloads/**
