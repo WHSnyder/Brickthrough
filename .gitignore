@@ -1,15 +1,6 @@
-/vrtest/*
-/handson-ml/*
-/training_images/*
-/train_exact_models/*
-/regtest/*
 /pose_basic_train/*
 /.DS_Store
 /.ipynb_checkpoints/
-models/**
-keypointnet/**
-piecetypes/**
-combo_renders/**
 nets/**
 unet/**
 data/**
