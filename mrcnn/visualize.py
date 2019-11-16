@@ -144,7 +144,7 @@ def display_instances(image, boxes, masks, class_ids, class_names,
         else:
             caption = captions[i]
         ax.text(x1, y1 + 8, caption,
-                color='w', size=11, backgroundcolor="none")
+                color='black', size=11, backgroundcolor="none")
 
         # Mask
         mask = masks[:, :, i]
@@ -279,12 +279,12 @@ def draw_box(image, box, color):
     return image
 
 
-def display_top_masks(image, mask, class_ids, class_names, limit=4):
+def display_top_masks(image, mask, class_ids, class_names, path, limit=4):
     """Display the given image and the top few class masks."""
     to_display = []
     titles = []
     to_display.append(image)
-    titles.append("H x W={}x{}".format(image.shape[0], image.shape[1]))
+    titles.append(path.replace("/home/will/projects/legoproj/data/",""))
     # Pick top prominent classes in this image
     unique_class_ids = np.unique(class_ids)
     mask_area = [np.sum(mask[:, :, np.where(class_ids == i)[0]])
