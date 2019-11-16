@@ -14,7 +14,7 @@ Far too many to list here when it comes to my lack of general CV/DL experience a
 
 * First stage  
 
-![alt text](./repo_images/tests.gif "inputs")  ![alt text](./repo_images/gts.gif "gts")  ![alt text](./repo_images/preds.gif "preds")  
+	![alt text](./repo_images/tests.gif "inputs")  ![alt text](./repo_images/gts.gif "gts")  ![alt text](./repo_images/preds.gif "preds")  
 	
 	* Training data has frequent abnormalities such as pieces lying half off-screen or extreme occlusion.  In such cases a wing could be hidden entirely with the exception of a 2x2 region of studs.  If this wing is viewed from directly above, it will be indistinguishable from a 2x2 brick piece. The network will be forced to make the wrong choice given the infomation at hand.
 	* The network is relatively accurate with real images of pieces, though struggles consistently with black pieces and differing resolutions.
@@ -31,7 +31,7 @@ Far too many to list here when it comes to my lack of general CV/DL experience a
 
 ## Future directions
 
-* After spending most of October surveying papers on SotA pose estimation algorithms/networks I came to the conclusion that estimating explicit 2D-3D correspondence would be the most realistic approach.  Fully deep-learned pose estimation pipelines such as OcclusionNet or PoseCNN were far too bulky/confusing to work with or understand and lighter networks such as KeypointNet didn't seem robust enough to heavy occlusion/textureless surfaces.  In the near future I would love to experiment with estimating dense correspondence with some kind of hierarchical FCN approach or a graph-based model as seen in OcclusionNet.  
+* After spending most of October surveying papers on SotA pose estimation algorithms/networks I came to the conclusion that estimating explicit 2D-3D correspondence would be the most realistic approach.  Fully deep-learned pose estimation pipelines such as <a href="https://github.com/dineshreddy91/Occlusion_Net">OcclusionNet</a> or <a href="https://github.com/yuxng/PoseCNN">PoseCNN</a> were far too bulky/confusing to work with and lighter networks such as KeypointNet didn't seem robust enough to heavy occlusion/textureless surfaces.  In the near future I would love to experiment with estimating dense correspondence with some kind of hierarchical FCN approach or a graph-based model as seen in OcclusionNet.  
 
 * Training a depth map estimator.
 
@@ -39,7 +39,7 @@ Far too many to list here when it comes to my lack of general CV/DL experience a
 
 * Methods involving a guess-rerender-refine approach to pose estimation or an iterative method as in this <a href="https://arxiv.org/pdf/1507.06550.pdf">human pose estimation method.</a>   
 
-* I don't any formal training or coursework in machine learning for computer vision so I could be wrong, but from my research it seems like a fully deep-learned pipeline encompassing all 3 stages would be impractical.  The need for fuzzy logic followed by structured 3D reasoning suggests a very messy soup of fully-connected layers and slow iteration time.  Pieces can be completely different or could have modular similarity to one another ie: 2 2x2 bricks make a 4x2 brick.
+* I don't any formal training or coursework in machine learning for computer vision so I could be wrong, but from my research it seems like a fully deep-learned pipeline encompassing all 3 stages would be impractical.  The need for fuzzy logic followed by structured 3D reasoning suggests a very messy soup of fully-connected layers and slow iteration time.  Pieces can be completely unique as in the engine piece used here or could have modular similarity to one another ie: 2 2x2 bricks make a 4x2 brick.  Trying to train a network to accommodate these fundemental differences seems wrong... 
 
 * Learning about deep learning more deeply.
 
