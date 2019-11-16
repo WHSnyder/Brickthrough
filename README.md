@@ -8,7 +8,7 @@ The particular use case I had in mind was building some kind of simple fighter c
 See this <a href="https://github.com/WHSnyder/LegoTrainingRenderer">repo</a> for training data details...
 
 
-## Challenges
+## Stages and their challenges
 
 Far too many to list here when it comes to my lack of general CV/DL experience and trouble digesting research papers... 
 
