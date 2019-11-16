@@ -1,6 +1,6 @@
 #  Lego Photogrammeter
 
-A three stage mess of a project for generating 3D Lego models from images.  The first stage uses a retrained Mask R-CNN model to extract 
+A three stage mess of a project for generating 3D models of Lego combinations from images.  The first stage uses a retrained Mask R-CNN model to extract 
 masks for each piece in the image. The second stage uses known 2D-3D correspondences with a pnp solver (OpenCV) to estimate poses for each piece.  The third stage refines the pose estimates.  
 
 The particular use case I had in mind was building some kind of simple fighter craft and flying the generated 3D model ingame.  The four pieces this primitve version uses are various x by x bricks, left-right versions of a basic wing piece, an engine type piece, and a pole for weapons.
@@ -18,6 +18,8 @@ Far too many to list here when it comes to my lack of general CV/DL experience a
 	
 	* Training data has frequent abnormalities such as pieces lying half off-screen or extreme occlusion.  In such cases a wing could be hidden entirely with the exception of a 2x2 region of studs.  If this wing is viewed from directly above, it will be indistinguishable from a 2x2 brick piece. The network will be forced to make the wrong choice given the infomation at hand.
 	* The network is relatively accurate with real images of pieces, though struggles consistently with black pieces and differing resolutions.
+
+	![alt text](./repo_images/real.jpeg "real")  ![alt text](./repo_images/real_pred.png "realpred")
 
 * Second stage
 
