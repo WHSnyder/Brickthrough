@@ -39,9 +39,9 @@ Far too many to list here when it comes to my lack of general CV/DL experience a
 
 * Exploring structure-from-motion techniques and possible integration with deep learning strategies. 
 
-* Methods involving a guess-rerender-refine approach to pose estimation or an iterative method as in this <a href="https://arxiv.org/pdf/1507.06550.pdf">human pose estimation method.</a>   
+* A reinforcement learning guess-rerender-refine approach to pose estimation or an iterative model as in this <a href="https://arxiv.org/pdf/1507.06550.pdf">human pose estimation method.</a>   
 
-* I don't any formal training or coursework in machine learning for computer vision so I could be wrong, but from my research it seems like a fully deep-learned pipeline encompassing all 3 stages would be impractical.  The need for fuzzy logic followed by structured 3D reasoning suggests a very messy soup of fully-connected layers and slow iteration time.  Pieces can be completely unique as in the engine piece used here or could have modular similarity to one another ie: 2 2x2 bricks make a 4x2 brick.  Trying to train a network to accommodate these fundemental differences seems wrong... 
+* I don't have any formal training or coursework in machine learning for computer vision so I could be wrong, but from my research it seems like a fully deep-learned pipeline encompassing all 3 stages would be impractical.  The need for fuzzy logic followed by structured 3D reasoning suggests a very convoluted design and painful design iteration times.  Pieces can be completely unique or could have modular similarity to one another ie: 2 2x2 bricks make a 4x2 brick.  Trying to train a network to accommodate these fundemental structural differences seems wrong... 
 
 * Learning about deep learning more deeply.
 
