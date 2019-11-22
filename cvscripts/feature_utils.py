@@ -2,14 +2,14 @@ import numpy as np
 import json
 import re
 import math
-
+from numpy import linalg as LA
 import matplotlib.pyplot as plt
 
 hf="/home"
 
 expr = re.compile("([-]?[0-9]*\.[0-9]{4})")
 dim = 512
-
+stud_offset = np.array([0.096,0.0,0.0,0.0],dtype=np.float32)
 
 def dictFromJson(filename):
     with open(filename) as json_file:
@@ -36,32 +36,34 @@ def get_object_matrices(filename):
     for key in data:
         data[key] = matrix_from_string(data[key])
     return data
-
+'''
+def get_circle_length(m,v,p,v1):
+    v2 = v1 + stud_offset
+'''
 
 
 def get_object_studs(piece):
     file = hf+"/will/projects/training/piecedata/{}.json".format(piece)
     studs=dictFromJson(file)["studs"]
-    #print(studs)
     return studs
 
 
-
-def verts_to_screen(model, view, frust, verts):
+def verts_to_screen(model, view, frust, verts,pr=False):
     
     screenverts = []
     mv = np.matmul(view,model)
 
     for vert in verts:
 
-        #vert = np.add(vert,np.array([0.0,0.0,.016,0.0])).astype(np.float32)
-
         camvert = np.matmul(mv, vert)
-        #depth = camvert[2]#(camvert/camvert[3])[2]
+        depth = LA.norm(camvert[0:3])
+
         screenvert = np.matmul(frust,camvert)
-        depth = screenvert[2]
         screenvert = screenvert/screenvert[3]
 
+        if pr:
+            print("Normed dist: {}".format())
+            
         if abs(screenvert[0]) < 1 and abs(screenvert[1]) < 1:
             screenvert[0:2] = (screenvert[0:2] + 1)/2
             screenvert[2] = depth

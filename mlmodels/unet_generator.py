@@ -6,7 +6,7 @@ import cv2
 class UnetGenerator(keras.utils.Sequence):
 
     #'Generates data for Keras'
-    def __init__(self, val, batch_size=1, dim=(32,32,32), n_channels=1,
+    def __init__(self, val, batch_size=5, dim=(32,32,32), n_channels=1,
                  n_classes=10, shuffle=True):
         #'Initialization'
         self.dim = dim
@@ -18,7 +18,7 @@ class UnetGenerator(keras.utils.Sequence):
         self.shuffle = shuffle
         self.val = val
         self.on_epoch_end()
-        self.path = "/home/will/projects/legoproj/data/normalz/"
+        self.path = "/home/will/projects/legoproj/data/exr_dset_{}/"
 
         random.seed(0)
 
@@ -27,7 +27,7 @@ class UnetGenerator(keras.utils.Sequence):
         #'Denotes the number of batches per epoch'
         if self.val:
             return 10
-        return 60
+        return 100
 
 
     def __getitem__(self,index):
@@ -41,8 +41,7 @@ class UnetGenerator(keras.utils.Sequence):
 
 
     def __data_generation(self):
-        #'Generates data containing batch_size samples' # X : (n_samples, *dim, n_channels)
-        # Initialization
+        
         x=[]
         y=[]
 
@@ -50,24 +49,22 @@ class UnetGenerator(keras.utils.Sequence):
         for i in range(self.batch_size):
 
             i1 = random.randint(0,1)
-            i2 = random.randint(0,2500)
+            i2 = random.randint(0,499)
 
-            if self.val:
-                i2 = random.randint(2500,3500)
-
-            imgpath = self.path + "{}_{}.png".format(i1,i2)
-            normalspath = self.path + "{}_{}_normz.png".format(i1,i2) 
+            imgpath = (self.path + "{}.png").format(i1,i2)
+            maskpath = (self.path + "studs_{}.png").format(i1,i2) 
 
             img = cv2.imread(imgpath,0)
-            #img = cv2.resize(img,(256,256),interpolation=cv2.INTER_LINEAR)
-            img = np.reshape(img,(512,512,1))
+            img = cv2.resize(img,(256,256),interpolation=cv2.INTER_LINEAR)
+            img = np.reshape(img,(256,256,1))
 
-            normals = cv2.imread(normalspath)
-            normals = cv2.resize(normals,(512,512),interpolation=cv2.INTER_LINEAR)
+            mask = cv2.imread(maskpath,0)
+            mask = cv2.resize(mask,(256,256),interpolation=cv2.INTER_LINEAR)
+            mask = np.reshape(mask,(256,256,1))
 
 
             x.append(img)
-            y.append(normals)
+            y.append(mask)
 
         x = np.array(x).astype('float32')/255.0
         y = np.array(y).astype('float32')/255.0
