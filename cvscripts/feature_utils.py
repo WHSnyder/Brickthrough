@@ -5,20 +5,16 @@ import math
 
 import matplotlib.pyplot as plt
 
-hf="/Users"
+hf="/home"
 
 expr = re.compile("([-]?[0-9]*\.[0-9]{4})")
 dim = 512
 
 
-
 def dictFromJson(filename):
-
     with open(filename) as json_file:
         data = json.load(json_file)
-
     return data
-
 
 
 
@@ -33,85 +29,45 @@ def matrix_from_string(matstring):
     
 
 
-
 def get_object_matrices(filename):
 
     data = dictFromJson(filename)
 
     for key in data:
         data[key] = matrix_from_string(data[key])
-
     return data
 
 
 
-
 def get_object_studs(piece):
-
-    #piece = piece.replace(".", "_")
-    #piece = piece.split("_")[0]
-    file = hf+"/will/projects/legoproj/pieces/{}.json".format(piece)
-
-    r = dictFromJson(file)["studs"]
-    #print(r)
-    return r
-
+    file = hf+"/will/projects/training/piecedata/{}.json".format(piece)
+    studs=dictFromJson(file)["studs"]
+    #print(studs)
+    return studs
 
 
 
 def verts_to_screen(model, view, frust, verts):
     
     screenverts = []
-    mvp = np.matmul(frust,np.matmul(view,model))
+    mv = np.matmul(view,model)
 
     for vert in verts:
 
-        screenvert = np.matmul(mvp, vert)
+        #vert = np.add(vert,np.array([0.0,0.0,.016,0.0])).astype(np.float32)
+
+        camvert = np.matmul(mv, vert)
+        #depth = camvert[2]#(camvert/camvert[3])[2]
+        screenvert = np.matmul(frust,camvert)
+        depth = screenvert[2]
         screenvert = screenvert/screenvert[3]
 
         if abs(screenvert[0]) < 1 and abs(screenvert[1]) < 1:
             screenvert[0:2] = (screenvert[0:2] + 1)/2
+            screenvert[2] = depth
             screenverts.append(screenvert)
 
-    return screenverts
-
-
-
-
-brickstuds = get_object_studs("Brick")
-wingrstuds = get_object_studs("WingR")
-
-
-
-
-def getStudMask(i):
-
-    modelmats = get_object_matrices(datadir + "mats/{}.txt".format(i))
-    cammat = modelmats["Camera"]
-    projmat = modelmats["Projection"]
-
-    maskdim = int(dim/2)
-    scenestuds = np.zeros((maskdim,maskdim))
-    screenverts = []
-
-    for key in modelmats:
-
-        if "Brick" in key:
-            studs = brickstuds
-        elif "Wing" in key:
-            studs = wingstuds
-        else:
-            continue
-        screenverts += verts_to_screen(modelmats[key], cammat, projmat, studs) 
-
-    for vert in screenverts:
-        npcoord = tuple([math.floor((1 - vert[1]) * maskdim), math.floor(vert[0] * maskdim)])
-        scenestuds[npcoord[0], npcoord[1]] = 1
-
-    scenestuds = np.reshape(scenestuds, (maskdim,maskdim,1))
-
-    return scenestuds
-
+    return np.array(screenverts,dtype=np.float32)
 
 
 def toNDC(verts, dims):
@@ -121,6 +77,9 @@ def toNDC(verts, dims):
         newverts.append(npcoord)
     return np.asarray(newverts)
 
+
+brickstuds = get_object_studs("Brick")
+wingrstuds = get_object_studs("WingR")
 
 
 def getCalibCorrs():
