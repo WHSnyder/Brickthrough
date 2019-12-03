@@ -99,10 +99,17 @@ def toNDC(verts, dims):
     return np.asarray(newverts)
 
 
+def fromNDC(verts,dims):
+    newverts = []
+    for vert in verts:
+        clipcoord = 2 * np.array([ vert[0]/dims[0], 1 - (vert[1]/dims[1]) ] , dtype=np.float32) - 1
+        #clipcoord = (2*clipcoord) - 1
+        newverts.append(clipcoord)
+    return newverts
+
+
 def toProjCoords(verts,m,v,p,filter=True):
-
-   mv = np.matmul(v,m)
-
+   mv = np.matmul(m,v)
    for i,vert in enumerate(verts):
 
         camvert = np.matmul(mv, vert)
@@ -120,34 +127,68 @@ def toProjCoords(verts,m,v,p,filter=True):
         screenvert[2] = depth
         screenvert[3] = i
 
-        #ndcs = toNDC([screenvert],(512,512))[0]
-
-        print(p)
+        ndcs = toNDC([screenvert],(512,512))
+        ndcs = fromNDC(ndcs,(512,512))[0]
 
         ndc_y = ndcs[0]
         ndc_x = ndcs[1] 
 
-        A = p[2,2]
-        B = p[3,2]
-        z_ndc = depth#2.0 * depth - 1.0
-        z_eye = B / (A + z_ndc)
-
         viewPos = np.zeros((3),dtype=np.float32)
-        viewPos[0] = z_eye * ndc_x / p[0,0]
-        viewPos[1] = z_eye * ndc_y / p[1,1]
-        viewPos[2] = -1 * z_eye
+        a = p[0,0]
+        b = p[1,1]
 
-        viewPos[0:2] = depth * ndcs
-        viewPos[2] = depth
+        c1 = (ndc_x/a)**2
+        c2 = (ndc_y/b)**2
+        z = math.sqrt((depth**2)/(c1 + c2 + 1))
 
-        print("NDCs: {}".format(ndcs))
+        x = 1 * (z * ndc_y/a)
+        y = 1 * (z * ndc_x/b)
+
+        viewPos[0] = x
+        viewPos[1] = y
+        viewPos[2] = -z
+
         print("True camvert: {}".format(camvert))
         print("Guessed camvert: {}\n".format(viewPos))
 
 
+
+def unproject_to_local(ndcs,depth,m,p):
+
+    ndcs = fromNDC(ndcs,(512,512))[0]
+
+    ndc_y = ndcs[0]
+    ndc_x = ndcs[1] 
+
+    viewPos = np.zeros((4),dtype=np.float32)
+    a = p[0,0]
+    b = p[1,1]
+
+    c1 = (ndc_x/a)**2
+    c2 = (ndc_y/b)**2
+    z = math.sqrt((depth**2)/(c1 + c2 + 1))
+
+    x = 1 * (z * ndc_y/a)
+    y = 1 * (z * ndc_x/b)
+
+    viewPos[0] = x
+    viewPos[1] = y
+    viewPos[2] = -z
+    viewPos[3] = 1.0
+
+    localPos = np.matmul(np.linalg.inv(m), viewPos)
+
+    #print("True camvert: {}".format(camvert))
+    #print("Guessed camvert: {}\n".format(viewPos))
+
+    return localPos
+
+
+
+
+
 brickstuds = get_object_studs("Brick")
 wingrstuds = get_object_studs("WingR")
-
 
 def getCalibCorrs():
     path = hf+"/will/projects/legoproj/utils/calib_data/calibdata.txt"
