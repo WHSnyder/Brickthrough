@@ -17,7 +17,6 @@ def dictFromJson(filename):
     return data
 
 
-
 def matrix_from_string(matstring):
 
     matches = expr.findall(matstring)
@@ -36,10 +35,20 @@ def get_object_matrices(filename):
     for key in data:
         data[key] = matrix_from_string(data[key])
     return data
-'''
+
+
+
 def get_circle_length(m,v,p,v1):
+
     v2 = v1 + stud_offset
-'''
+
+    screenverts = verts_to_screen(m,v,p,[v1,v2],filter=False)
+    screenverts[:,0:2] = toNDC(screenverts[:,0:2], (512,512))
+
+    diff = screenverts[0,0:2] - screenverts[1,0:2]
+
+    return int(round(LA.norm(diff)))
+
 
 
 def get_object_studs(piece):
@@ -48,12 +57,13 @@ def get_object_studs(piece):
     return studs
 
 
-def verts_to_screen(model, view, frust, verts,pr=False):
+
+def verts_to_screen(model,view,frust,verts,filter=True):
     
     screenverts = []
     mv = np.matmul(view,model)
 
-    for vert in verts:
+    for i,vert in enumerate(verts):
 
         camvert = np.matmul(mv, vert)
         depth = LA.norm(camvert[0:3])
@@ -61,13 +71,13 @@ def verts_to_screen(model, view, frust, verts,pr=False):
         screenvert = np.matmul(frust,camvert)
         screenvert = screenvert/screenvert[3]
 
-        if pr:
-            print("Normed dist: {}".format())
-            
-        if abs(screenvert[0]) < 1 and abs(screenvert[1]) < 1:
-            screenvert[0:2] = (screenvert[0:2] + 1)/2
-            screenvert[2] = depth
-            screenverts.append(screenvert)
+        if filter and (abs(screenvert[0]) > 1 or abs(screenvert[1]) > 1):
+            continue
+        
+        screenvert[0:2] = (screenvert[0:2] + 1)/2
+        screenvert[2] = depth
+        screenvert[3] = i
+        screenverts.append(screenvert)
 
     return np.array(screenverts,dtype=np.float32)
 
@@ -75,9 +85,64 @@ def verts_to_screen(model, view, frust, verts,pr=False):
 def toNDC(verts, dims):
     newverts = []
     for vert in verts:
-        npcoord = tuple([math.floor(vert[0] * dims[0]), math.floor((1 - vert[1]) * dims[1])])
+        npcoord = tuple([round(vert[0] * dims[0]), round((1 - vert[1]) * dims[1])])
+        
+        #messy and likely unnecessary...
+        vert[0] = dims[0] - 1 if vert[0] == dims[0] else vert[0]
+        vert[0] = 0 if vert[0] == -1 else vert[0]
+
+        vert[1] = dims[1] - 1 if vert[1] == dims[1] else vert[1]
+        vert[1] = 0 if vert[1] == -1 else vert[1]
+
         newverts.append(npcoord)
+
     return np.asarray(newverts)
+
+
+def toProjCoords(verts,m,v,p,filter=True):
+
+   mv = np.matmul(v,m)
+
+   for i,vert in enumerate(verts):
+
+        camvert = np.matmul(mv, vert)
+        depth = LA.norm(camvert[0:3])
+
+        screenvert = np.matmul(p,camvert)
+        screenvert = screenvert/screenvert[3]
+
+        ndcs = np.copy(screenvert[0:2])
+
+        if filter and (abs(screenvert[0]) > 1 or abs(screenvert[1]) > 1):
+            continue
+        
+        screenvert[0:2] = (screenvert[0:2] + 1)/2
+        screenvert[2] = depth
+        screenvert[3] = i
+
+        #ndcs = toNDC([screenvert],(512,512))[0]
+
+        print(p)
+
+        ndc_y = ndcs[0]
+        ndc_x = ndcs[1] 
+
+        A = p[2,2]
+        B = p[3,2]
+        z_ndc = depth#2.0 * depth - 1.0
+        z_eye = B / (A + z_ndc)
+
+        viewPos = np.zeros((3),dtype=np.float32)
+        viewPos[0] = z_eye * ndc_x / p[0,0]
+        viewPos[1] = z_eye * ndc_y / p[1,1]
+        viewPos[2] = -1 * z_eye
+
+        viewPos[0:2] = depth * ndcs
+        viewPos[2] = depth
+
+        print("NDCs: {}".format(ndcs))
+        print("True camvert: {}".format(camvert))
+        print("Guessed camvert: {}\n".format(viewPos))
 
 
 brickstuds = get_object_studs("Brick")

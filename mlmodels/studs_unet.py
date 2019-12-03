@@ -74,8 +74,8 @@ def custom_unet(
     use_dropout_on_upsampling=False, 
     dropout=0.3, 
     dropout_change_per_layer=0.0,
-    filters=48,
-    num_layers=3,
+    filters=16,
+    num_layers=2,
     output_activation='relu'): # 'sigmoid' or 'softmax'
     
     p="same"
@@ -97,7 +97,7 @@ def custom_unet(
         dropout += dropout_change_per_layer
         filters = filters*2 # double the number of filters with each layer
 
-    x = conv2d_block(inputs=x, filters=32, use_batch_norm=use_batch_norm, dropout=dropout,padding=p)
+    x = conv2d_block(inputs=x, filters=filters, use_batch_norm=use_batch_norm, dropout=dropout,padding=p)
 
     if not use_dropout_on_upsampling:
         dropout = 0.0
@@ -110,7 +110,48 @@ def custom_unet(
         x = concatenate([x, conv])
         x = conv2d_block(inputs=x, filters=filters, use_batch_norm=use_batch_norm, dropout=dropout, padding=p)
     
-    outputs = Conv2D(1, (3,3), activation='sigmoid', padding=p) (x)    
+    outputs = Conv2D(1, (5,5), activation='sigmoid', padding=p) (x)    
+    
+    model = Model(inputs=[inputs], outputs=[outputs])
+
+    return model
+
+###################################################################################################
+###################################################################################################
+###################################################################################################
+
+def dilation_net(
+    input_shape,
+    num_classes=3,
+    use_batch_norm=True, 
+    upsample_mode='deconv', # 'deconv' or 'simple' 
+    use_dropout_on_upsampling=False, 
+    dropout=0.3, 
+    dropout_change_per_layer=0.0,
+    filters=40,
+    num_layers=3,
+    output_activation='relu'): # 'sigmoid' or 'softmax'
+    
+    p="same"
+
+    # Build U-Net model
+    inputs = Input(input_shape)
+    c = inputs   
+
+    down_layers = []
+    for l in range(num_layers*2):
+
+        c = Conv2D(filters, (3,3), activation='relu', dilation_rate=2*(l+1), kernel_initializer='he_normal', padding=p) (c)
+        if use_batch_norm:
+            c = BatchNormalization()(c)
+        if dropout > 0.0:
+            c = Dropout(dropout)(c)
+        dropout += dropout_change_per_layer
+        filters = filters # double the number of filters with each layer
+
+    c = Conv2D(filters, (3,3), activation='relu', dilation_rate=2, kernel_initializer='he_normal', padding=p) (c)
+    
+    outputs = Conv2D(1, (5,5), activation='sigmoid', padding=p) (c)    
     
     model = Model(inputs=[inputs], outputs=[outputs])
 
@@ -119,10 +160,10 @@ def custom_unet(
 
 def iou_cost(ytrue,ypred):
 
-    intersection = tf.math.multiply(ytrue,ypred) 
+    intersection = tf.math.multiply(ytrue,ypred)
     union = tf.math.subtract( tf.math.add(ytrue,ypred), intersection)
 
-    i = tf.reduce_sum(intersection) 
+    i = tf.reduce_sum(intersection)
     u = tf.reduce_sum(union)
 
     return tf.math.abs(1 - (i/u))
@@ -139,7 +180,8 @@ if args.predict:
 
         #fig = plt.figure(figsize=(4, 4))
 
-        img = cv2.imread(datapath + "{}.png".format(num),0)
+        #img = cv2.imread(datapath + "{}.png".format(num),0)
+        img = cv2.imread("/home/will/Desktop/27.png",0)
         img = cv2.resize(img,(256,256),interpolation=cv2.INTER_LINEAR)
         
         #mask = cv2.imread(datapath + "studs_{}.png".format(num))
@@ -177,7 +219,7 @@ history = mynet.fit_generator(generator=train_gen,
                     validation_steps=10,
                     use_multiprocessing=True,
                     workers=6,
-                    epochs=20)
+                    epochs=25)
 
 mynet.save("/home/will/projects/legoproj/nets/tst.h5")
 
