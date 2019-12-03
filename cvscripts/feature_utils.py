@@ -5,7 +5,7 @@ import math
 from numpy import linalg as LA
 import matplotlib.pyplot as plt
 
-hf="/home"
+hf="/Users"
 
 expr = re.compile("([-]?[0-9]*\.[0-9]{4})")
 dim = 512
@@ -43,7 +43,7 @@ def get_circle_length(m,v,p,v1):
 
 
 def get_object_studs(piece):
-    file = hf+"/will/projects/training/piecedata/{}.json".format(piece)
+    file = hf+"/will/projects/legotrain/piecedata/{}.json".format(piece)
     studs=dictFromJson(file)["studs"]
     return studs
 
