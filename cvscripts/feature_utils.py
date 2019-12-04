@@ -5,7 +5,7 @@ import math
 from numpy import linalg as LA
 import matplotlib.pyplot as plt
 
-hf="/Users"
+hf="/home"
 
 expr = re.compile("([-]?[0-9]*\.[0-9]{4})")
 dim = 512
@@ -52,7 +52,7 @@ def get_circle_length(m,v,p,v1):
 
 
 def get_object_studs(piece):
-    file = hf+"/will/projects/legotrain/piecedata/{}.json".format(piece)
+    file = hf+"/will/projects/training/piecedata/{}.json".format(piece)
     studs=dictFromJson(file)["studs"]
     return studs
 
@@ -98,7 +98,6 @@ def toNDC(verts, dims):
 
     return np.asarray(newverts)
 
-
 def fromNDC(verts,dims):
     newverts = []
     for vert in verts:
@@ -108,57 +107,25 @@ def fromNDC(verts,dims):
     return newverts
 
 
-def toProjCoords(verts,m,v,p,filter=True):
-   mv = np.matmul(m,v)
-   for i,vert in enumerate(verts):
+def unproject_to_local(data,infodict,toworld,p,pr=False):
 
-        camvert = np.matmul(mv, vert)
-        depth = LA.norm(camvert[0:3])
+    mask = int(round(data[3]/5))
 
-        screenvert = np.matmul(p,camvert)
-        screenvert = screenvert/screenvert[3]
+    if mask == 0:
+        return np.array([0.0,0.0,0.0,1.0],dtype=np.float32)
 
-        ndcs = np.copy(screenvert[0:2])
+    info = infodict[mask]
+    tolocal = info["w2l"]
+    lx,ly,lz = info["lows"]
+    dx,dy,dz = info["dims"]
 
-        if filter and (abs(screenvert[0]) > 1 or abs(screenvert[1]) > 1):
-            continue
-        
-        screenvert[0:2] = (screenvert[0:2] + 1)/2
-        screenvert[2] = depth
-        screenvert[3] = i
+    depth = data[2]
 
-        ndcs = toNDC([screenvert],(512,512))
-        ndcs = fromNDC(ndcs,(512,512))[0]
-
-        ndc_y = ndcs[0]
-        ndc_x = ndcs[1] 
-
-        viewPos = np.zeros((3),dtype=np.float32)
-        a = p[0,0]
-        b = p[1,1]
-
-        c1 = (ndc_x/a)**2
-        c2 = (ndc_y/b)**2
-        z = math.sqrt((depth**2)/(c1 + c2 + 1))
-
-        x = 1 * (z * ndc_y/a)
-        y = 1 * (z * ndc_x/b)
-
-        viewPos[0] = x
-        viewPos[1] = y
-        viewPos[2] = -z
-
-        print("True camvert: {}".format(camvert))
-        print("Guessed camvert: {}\n".format(viewPos))
-
-
-
-def unproject_to_local(ndcs,depth,m,p):
-
-    ndcs = fromNDC(ndcs,(512,512))[0]
+    ndcs = data[0:2]
+    ndcs = fromNDC([ndcs[::-1]],(512,512))[0]
 
     ndc_y = ndcs[0]
-    ndc_x = ndcs[1] 
+    ndc_x = ndcs[1]
 
     viewPos = np.zeros((4),dtype=np.float32)
     a = p[0,0]
@@ -176,12 +143,18 @@ def unproject_to_local(ndcs,depth,m,p):
     viewPos[2] = -z
     viewPos[3] = 1.0
 
-    localPos = np.matmul(np.linalg.inv(m), viewPos)
+    worldPos = np.matmul(toworld,viewPos)
+    localPos = np.matmul(tolocal,worldPos)
+    localPos = localPos/localPos[3]
 
-    #print("True camvert: {}".format(camvert))
-    #print("Guessed camvert: {}\n".format(viewPos))
+    localPos[0] = (localPos[0] + lx)/dx 
+    localPos[1] = (localPos[1] + ly)/dy
+    localPos[2] = (localPos[2] + lz)/dz
 
-    return localPos
+    if pr:
+        print(localPos)
+
+    return np.clip(localPos,0.0,1.0)
 
 
 
