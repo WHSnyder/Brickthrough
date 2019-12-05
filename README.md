@@ -24,7 +24,7 @@ Far too many to list here when it comes to my lack of general CV/DL experience a
 * Second stage
 
 	* Bad masks from stage 1 often make this stage hopeless.
-	* More comming soon... 
+	* More coming soon... 
 
 * Third stage 
 
