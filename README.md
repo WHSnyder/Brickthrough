@@ -1,4 +1,4 @@
-#  Lego Photogrammeter
+#  Deep-Learned Lego Perception Pipeline
 
 A three stage mess of a project for generating 3D models of Lego combinations from images.  The first stage uses a retrained Mask R-CNN model to extract 
 masks for each piece in the image. The second stage uses known 2D-3D correspondences with a pnp solver (OpenCV) to estimate poses for each piece.  The third stage refines the pose estimates.  
@@ -28,23 +28,19 @@ Far too many to list here when it comes to my lack of general CV/DL experience a
 
 * Third stage 
 
-	* This is by far the easiest stage to execute considering 3D context is available and no complex deep learning concepts are required.  Better approaches are obviously needed but as of now studs and insets are brute-force matched with one another to find likely fits between nearby pieces.  Will fail if 2nd stage estimates are bad enough.
+	* Studs and insets are brute-force matched with one another to find likely fits between nearby pieces. A lazy solution that works well enough for now.
 
 
 ## Future directions
 
-* After spending most of October surveying papers on SotA pose estimation algorithms/networks I came to the conclusion that estimating explicit 2D-3D correspondence would be the most realistic approach.  Fully deep-learned pose estimation pipelines such as <a href="https://github.com/dineshreddy91/Occlusion_Net">OcclusionNet</a> or <a href="https://github.com/yuxng/PoseCNN">PoseCNN</a> were far too bulky/confusing to work with and lighter networks such as KeypointNet didn't seem robust enough to heavy occlusion/textureless surfaces.  In the near future I would love to experiment with estimating dense correspondence with some kind of hierarchical FCN approach or a graph-based model as seen in OcclusionNet.  
+* After spending most of October surveying papers on SotA pose estimation algorithms/networks, I came to the conclusion that estimating explicit 2D-3D correspondence would be the most realistic approach.  Fully deep-learned pose estimation pipelines such as <a href="https://github.com/dineshreddy91/Occlusion_Net">OcclusionNet</a> or <a href="https://github.com/yuxng/PoseCNN">PoseCNN</a> were far too bulky/confusing to work with and lighter networks such as KeypointNet didn't seem robust enough to heavy occlusion/textureless surfaces.  In the near future I would love to experiment with estimating dense correspondence with some kind of hierarchical FCN approach or a graph-based model as seen in OcclusionNet.  
 
 * Training a depth map estimator.
 
-* Exploring structure-from-motion techniques and possible integration with deep learning strategies. 
+* Exploring structure-from-motion techniques and integration with deep learning strategies. 
 
 * A reinforcement learning guess-rerender-refine approach to pose estimation or an iterative model as in this <a href="https://arxiv.org/pdf/1507.06550.pdf">human pose estimation method.</a>   
 
 * I don't have any formal training or coursework in machine learning for computer vision so I could be wrong, but from my research it seems like a fully deep-learned pipeline encompassing all 3 stages would be impractical.  The need for fuzzy logic followed by structured 3D reasoning suggests a very convoluted design and painful design iteration times.  Pieces can be completely unique or could have modular similarity to one another ie: 2 2x2 bricks make a 4x2 brick.  Trying to train a network to accommodate these fundemental structural differences seems wrong... 
 
 * Learning about deep learning more deeply.
-
-
-
-
