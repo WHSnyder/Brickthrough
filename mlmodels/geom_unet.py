@@ -72,7 +72,7 @@ def custom_unet(
     use_batch_norm=True, 
     upsample_mode='deconv', # 'deconv' or 'simple' 
     use_dropout_on_upsampling=False, 
-    dropout=0.0, 
+    dropout=0.3, 
     dropout_change_per_layer=0.0,
     filters=48,
     num_layers=4,
@@ -97,14 +97,14 @@ def custom_unet(
         dropout += dropout_change_per_layer
         filters = filters*2 # double the number of filters with each layer
 
-    x = conv2d_block(inputs=x, filters=3, use_batch_norm=use_batch_norm, dropout=dropout,padding=p)
+    x = conv2d_block(inputs=x, filters=filters, use_batch_norm=use_batch_norm, dropout=dropout,padding=p)
 
     if not use_dropout_on_upsampling:
         dropout = 0.0
         dropout_change_per_layer = 0.0
 
     for conv in reversed(down_layers):        
-        filters = 3 #//=2   decreasing number of filters with each layer 
+        filters //=2  # decreasing number of filters with each layer 
         dropout -= dropout_change_per_layer
         x = upsample(filters, (2, 2), strides=(2, 2),padding=p) (x)
         x = concatenate([x, conv])
@@ -136,6 +136,22 @@ def sum_differences(ytrue,ypred):
     diff = tf.square(diff)
 
     return tf.reduce_sum(diff)
+
+
+def huber_loss(y_true, y_pred, clip_delta=1.0):
+  error = y_true - y_pred
+  cond  = tf.keras.backend.abs(error) < clip_delta
+
+  squared_loss = 0.5 * tf.keras.backend.square(error)
+  linear_loss  = clip_delta * (tf.keras.backend.abs(error) - 0.5 * clip_delta)
+
+  return tf.where(cond, squared_loss, linear_loss)
+
+'''
+ ' Same as above but returns the mean loss.
+'''
+def huber_loss_mean(y_true, y_pred, clip_delta=1.0):
+  return tf.keras.backend.mean(huber_loss(y_true, y_pred, clip_delta))
 
 
 
@@ -182,7 +198,7 @@ if args.predict:
 
 
 mynet = custom_unet((128,128,1))
-mynet.compile(optimizer="adam", loss=sum_differences)
+mynet.compile(optimizer="adam", loss=huber_loss_mean)
 train_gen = Geom_Generator(False)
 val_gen = Geom_Generator(True)
 
@@ -193,7 +209,7 @@ history = mynet.fit_generator(generator=train_gen,
                     validation_steps=10,
                     use_multiprocessing=True,
                     workers=6,
-                    epochs=20)
+                    epochs=15)
 
 mynet.save("/home/will/projects/legoproj/nets/geom_tst.h5")
 

@@ -145,14 +145,18 @@ def unproject_to_local(data,infodict,toworld,p,pr=False):
 
     worldPos = np.matmul(toworld,viewPos)
     localPos = np.matmul(tolocal,worldPos)
-    localPos = localPos/localPos[3]
+    #localPos = localPos/localPos[3]
 
-    localPos[0] = (localPos[0] + lx)/dx 
-    localPos[1] = (localPos[1] + ly)/dy
-    localPos[2] = (localPos[2] + lz)/dz
+    localPos[0] = (localPos[0] - lx)/dx 
+    localPos[1] = (localPos[1] - ly)/dy
+    localPos[2] = (localPos[2] - lz)/dz
 
-    if pr:
-        print(localPos)
+    localPos = np.absolute( localPos )
+
+    #if data[0] == 256:
+    #    print(localPos)
+        #rint(mask)
+        #print(localPos)
 
     return np.clip(localPos,0.0,1.0)
 

@@ -18,7 +18,10 @@ class UnetGenerator(keras.utils.Sequence):
         self.shuffle = shuffle
         self.val = val
         self.on_epoch_end()
-        self.path = "/home/will/projects/legoproj/data/exr_dset_{}/"
+        self.path = "/home/will/projects/legoproj/data/kpts_dset_{}/kpts/"
+
+        self.numdict = {0:398,1:126,2:723}
+
 
         random.seed(0)
 
@@ -48,11 +51,11 @@ class UnetGenerator(keras.utils.Sequence):
         # Generate data
         for i in range(self.batch_size):
 
-            i1 = random.randint(0,1)
-            i2 = random.randint(0,499)
+            i1 = random.randint(0,2)
+            i2 = random.randint(0,self.numdict[i1])
 
-            imgpath = (self.path + "{}.png").format(i1,i2)
-            maskpath = (self.path + "studs_{}.png").format(i1,i2) 
+            imgpath = (self.path + "{}_masked.png").format(i1,i2)
+            maskpath = (self.path + "{}_outline.png").format(i1,i2) 
 
             img = cv2.imread(imgpath,0)
             img = cv2.resize(img,(256,256),interpolation=cv2.INTER_LINEAR)

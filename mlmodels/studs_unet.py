@@ -74,7 +74,7 @@ def custom_unet(
     use_dropout_on_upsampling=False, 
     dropout=0.3, 
     dropout_change_per_layer=0.0,
-    filters=16,
+    filters=32,
     num_layers=2,
     output_activation='relu'): # 'sigmoid' or 'softmax'
     
@@ -120,42 +120,6 @@ def custom_unet(
 ###################################################################################################
 ###################################################################################################
 
-def dilation_net(
-    input_shape,
-    num_classes=3,
-    use_batch_norm=True, 
-    upsample_mode='deconv', # 'deconv' or 'simple' 
-    use_dropout_on_upsampling=False, 
-    dropout=0.3, 
-    dropout_change_per_layer=0.0,
-    filters=40,
-    num_layers=3,
-    output_activation='relu'): # 'sigmoid' or 'softmax'
-    
-    p="same"
-
-    # Build U-Net model
-    inputs = Input(input_shape)
-    c = inputs   
-
-    down_layers = []
-    for l in range(num_layers*2):
-
-        c = Conv2D(filters, (3,3), activation='relu', dilation_rate=2*(l+1), kernel_initializer='he_normal', padding=p) (c)
-        if use_batch_norm:
-            c = BatchNormalization()(c)
-        if dropout > 0.0:
-            c = Dropout(dropout)(c)
-        dropout += dropout_change_per_layer
-        filters = filters # double the number of filters with each layer
-
-    c = Conv2D(filters, (3,3), activation='relu', dilation_rate=2, kernel_initializer='he_normal', padding=p) (c)
-    
-    outputs = Conv2D(1, (5,5), activation='sigmoid', padding=p) (c)    
-    
-    model = Model(inputs=[inputs], outputs=[outputs])
-
-    return model
 
 
 def iou_cost(ytrue,ypred):
@@ -170,9 +134,11 @@ def iou_cost(ytrue,ypred):
 
 
 
+
+
 if args.predict:
 
-    model = load_model("/home/will/projects/legoproj/nets/tst.h5",compile=False)
+    model = load_model("/home/will/projects/legoproj/nets/tstwing.h5",compile=False)
 
     while input("Predict?: ") != 'q':
 
@@ -181,7 +147,7 @@ if args.predict:
         #fig = plt.figure(figsize=(4, 4))
 
         #img = cv2.imread(datapath + "{}.png".format(num),0)
-        img = cv2.imread("/home/will/Desktop/27.png",0)
+        img = cv2.imread("/home/will/projects/legoproj/data/kpts_dset_{}/kpts/{}_masked.png".format(0,num),0)
         img = cv2.resize(img,(256,256),interpolation=cv2.INTER_LINEAR)
         
         #mask = cv2.imread(datapath + "studs_{}.png".format(num))
@@ -221,7 +187,7 @@ history = mynet.fit_generator(generator=train_gen,
                     workers=6,
                     epochs=25)
 
-mynet.save("/home/will/projects/legoproj/nets/tst.h5")
+mynet.save("/home/will/projects/legoproj/nets/tstwing.h5")
 
 
 # "Loss"
