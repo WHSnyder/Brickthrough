@@ -6,7 +6,7 @@ import cv2
 class UnetGenerator(keras.utils.Sequence):
 
     #'Generates data for Keras'
-    def __init__(self, val, batch_size=1, dim=(32,32,32), n_channels=1,
+    def __init__(self, val, batch_size=6, dim=(32,32,32), n_channels=1,
                  n_classes=10, shuffle=True):
         #'Initialization'
         self.dim = dim
@@ -61,26 +61,23 @@ class UnetGenerator(keras.utils.Sequence):
             img = cv2.resize(img,(256,256),interpolation=cv2.INTER_LINEAR)
             img = np.reshape(img,(256,256,1))
 
-            mask = cv2.imread(maskpath,0)
-            #masked = cv2.cvtColor(mask,cv2.COLOR_RGB2HSV)
-            mask = cv2.resize(mask,(256,256),interpolation=cv2.INTER_LINEAR)
-            mask = np.reshape(mask,(256,256,1))
-            #mask_stacked = cv2.inRange(masked, (30-1,0,100), (30+1,255,255))
-            #mask_stacked = cv2.inRange(masked, (0,0,100), (200,255,255))
-            #mask_stacked = np.reshape(mask_stacked,(256,256,1))
+            mask = cv2.imread(maskpath)
+            masked = cv2.cvtColor(mask,cv2.COLOR_RGB2HSV)
+            #mask = cv2.resize(mask,(256,256),interpolation=cv2.INTER_LINEAR)
+            #mask = np.reshape(mask,(256,256,1))
+            mask_stacked = cv2.inRange(masked, (30-1,0,100), (30+1,255,255))
+            mask_stacked = np.reshape(mask_stacked,(256,256,1))
 
-            '''inds={0:30,1:60,2:90,3:120,4:150}
+            inds={0:30,1:60,2:90,3:120,4:150}
 
             for ind in inds:
                 if ind == 0:
                     continue
-                cut = inds[ind]
-                newmask = np.reshape( cv2.inRange( masked, (cut-1,0,100), (cut+1,256,256) ), (256,256,1))
+                newmask = np.reshape( cv2.inRange(masked, (ind-1,0,100), (ind+1,256,256)) (256,256,1))
                 mask_stacked = np.concatenate((mask_stacked,newmask),axis=-1)
-            '''
 
             x.append(img)
-            y.append(mask)#_stacked)
+            y.append(mask_stacked)
 
         x = np.array(x).astype('float32')/255.0
         y = np.array(y).astype('float32')/255.0

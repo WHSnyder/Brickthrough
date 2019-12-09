@@ -24,6 +24,10 @@ Far too many to list here when it comes to my lack of general CV/DL experience a
 * Second stage
 
 	* Bad masks from stage 1 often make this stage hopeless.
+	* Two Unets produce highlights for studs and explicit keypoints on each piece.
+
+	![alt text](./repo_images/prediction.png "studsreal")
+
 	* More comming soon... 
 
 * Third stage 
@@ -33,7 +37,7 @@ Far too many to list here when it comes to my lack of general CV/DL experience a
 
 ## Future directions
 
-* After spending most of October surveying papers on SotA pose estimation algorithms/networks I came to the conclusion that estimating explicit 2D-3D correspondence would be the most realistic approach.  Fully deep-learned pose estimation pipelines such as <a href="https://github.com/dineshreddy91/Occlusion_Net">OcclusionNet</a> or <a href="https://github.com/yuxng/PoseCNN">PoseCNN</a> were far too bulky/confusing to work with and lighter networks such as KeypointNet didn't seem robust enough to heavy occlusion/textureless surfaces.  In the near future I would love to experiment with estimating dense correspondence with some kind of hierarchical FCN approach or a graph-based model as seen in OcclusionNet.  
+* After spending most of October surveying papers on SotA pose estimation algorithms/networks I figured estimating explicit 2D-3D correspondence would be the most realistic approach.  Fully deep-learned pose estimation pipelines such as <a href="https://github.com/dineshreddy91/Occlusion_Net">OcclusionNet</a> or <a href="https://github.com/yuxng/PoseCNN">PoseCNN</a> were far too bulky/confusing to work with and lighter networks such as KeypointNet didn't seem robust enough to heavy occlusion/textureless surfaces.  In the near future I would love to experiment with estimating dense correspondence with some kind of hierarchical FCN approach or a graph-based model as seen in OcclusionNet.  
 
 * Training a depth map estimator.
 

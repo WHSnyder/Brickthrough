@@ -54,14 +54,15 @@ def conv2d_block(
     kernel_size=(4,4), 
     activation='relu', 
     kernel_initializer='he_normal', 
-    padding='same'):
+    padding='same',
+    dila=1):
     
-    c = Conv2D(filters, kernel_size, activation=activation, kernel_initializer=kernel_initializer, padding=padding) (inputs)
+    c = Conv2D(filters, kernel_size, activation=activation, kernel_initializer=kernel_initializer, padding=padding, dilation_rate=dila) (inputs)
     if use_batch_norm:
         c = BatchNormalization()(c)
     if dropout > 0.0:
         c = Dropout(dropout)(c)
-    c = Conv2D(filters, kernel_size, activation=activation, kernel_initializer=kernel_initializer, padding=padding) (c)
+    c = Conv2D(filters, kernel_size, activation=activation, kernel_initializer=kernel_initializer, padding=padding, dilation_rate=dila) (c)
     if use_batch_norm:
         c = BatchNormalization()(c)
     return c
@@ -71,11 +72,11 @@ def custom_unet(
     num_classes=3,
     use_batch_norm=True, 
     upsample_mode='deconv', # 'deconv' or 'simple' 
-    use_dropout_on_upsampling=False, 
-    dropout=0.3, 
+    use_dropout_on_upsampling=True, 
+    dropout=0.2, 
     dropout_change_per_layer=0.0,
-    filters=32,
-    num_layers=2,
+    filters=128,
+    num_layers=6,
     output_activation='relu'): # 'sigmoid' or 'softmax'
     
     p="same"
@@ -95,22 +96,22 @@ def custom_unet(
         down_layers.append(x)
         x = MaxPooling2D((2, 2),padding=p) (x)
         dropout += dropout_change_per_layer
-        filters = filters*2 # double the number of filters with each layer
+        #filters = filters*2 # double the number of filters with each layer
 
-    x = conv2d_block(inputs=x, filters=filters, use_batch_norm=use_batch_norm, dropout=dropout,padding=p)
+    x = conv2d_block(inputs=x, dila=5, filters=filters, use_batch_norm=use_batch_norm, dropout=dropout,padding=p)
 
     if not use_dropout_on_upsampling:
         dropout = 0.0
         dropout_change_per_layer = 0.0
 
     for conv in reversed(down_layers):        
-        filters //= 2 # decreasing number of filters with each layer 
+        filters =128#//= 2  decreasing number of filters with each layer 
         dropout -= dropout_change_per_layer
         x = upsample(filters, (2, 2), strides=(2, 2),padding=p) (x)
         x = concatenate([x, conv])
         x = conv2d_block(inputs=x, filters=filters, use_batch_norm=use_batch_norm, dropout=dropout, padding=p)
     
-    outputs = Conv2D(1, (5,5), activation='sigmoid', padding=p) (x)    
+    outputs = Conv2D(1, (7,7), activation='sigmoid', padding=p) (x)    
     
     model = Model(inputs=[inputs], outputs=[outputs])
 
@@ -120,15 +121,25 @@ def custom_unet(
 ###################################################################################################
 ###################################################################################################
 
-
-
-def iou_cost(ytrue,ypred):
+def simple_iou_cost(ytrue,ypred):
 
     intersection = tf.math.multiply(ytrue,ypred)
     union = tf.math.subtract( tf.math.add(ytrue,ypred), intersection)
 
-    i = tf.reduce_sum(intersection)
-    u = tf.reduce_sum(union)
+    imask = tf.ones(tf.shape(intersection),dtype=tf.dtypes.float32)/2.0
+    umask = tf.ones(tf.shape(union),dtype=tf.dtypes.float32)/2.0
+
+    imask = tf.keras.backend.greater(intersection,imask)
+    umask = tf.keras.backend.greater(union,umask)
+
+    imask = tf.dtypes.cast(imask, tf.float32)
+    umask = tf.dtypes.cast(umask, tf.float32)
+
+    i = tf.reduce_sum(imask)
+    u = tf.reduce_sum(umask) + 1
+
+    #i = tf.reduce_sum(intersection)
+    #u = tf.reduce_sum(union)
 
     return tf.math.abs(1 - (i/u))
 
@@ -136,9 +147,47 @@ def iou_cost(ytrue,ypred):
 
 
 
+def iou_cost(ytrue,ypred):
+
+    intersection = tf.math.multiply(ytrue,ypred)
+    union = tf.math.subtract( tf.math.add(ytrue,ypred), intersection) 
+
+    intersection = tf.transpose(intersection,perm=[0,3,1,2])
+    union = tf.transpose(union,perm=[0,3,1,2])
+
+    intersection = tf.reshape(intersection, [5,5,-1])
+    union = tf.reshape(union, [5,5,-1])
+
+    i = tf.reduce_sum(intersection,axis=-1)
+    u = tf.reduce_sum(union,axis=-1)
+
+    iones = tf.ones(i.shape,dtype=tf.dtypes.float32)
+    uones = tf.ones(u.shape,dtype=tf.dtypes.float32)
+
+    #i = tf.math.maximum(i,iones)
+    #u = tf.math.maximum(u,uones)
+
+    s = tf.math.abs(1 - (i/u))
+
+    return tf.reduce_sum(s)
+
+
+
+def dice_loss(y_true, y_pred):
+    numerator = 2 * tf.reduce_sum(y_true * y_pred,axis=1)
+    denominator = tf.reduce_sum(y_true + y_pred,axis=1) + 1
+    return tf.reduce_sum(1 - numerator/denominator)
+    #return 1 - numerator / denominator
+
+
+def l2_loss(y_true,y_pred):
+    diffs = tf.math.square(y_pred - y_true)
+    return tf.math.sqrt(tf.reduce_sum(diffs))
+
+
 if args.predict:
 
-    model = load_model("/home/will/projects/legoproj/nets/tstwing.h5",compile=False)
+    model = load_model("/home/will/projects/legoproj/nets/tst.h5",compile=False)
 
     while input("Predict?: ") != 'q':
 
@@ -146,16 +195,18 @@ if args.predict:
 
         #fig = plt.figure(figsize=(4, 4))
 
-        #img = cv2.imread(datapath + "{}.png".format(num),0)
-        img = cv2.imread("/home/will/projects/legoproj/data/kpts_dset_{}/kpts/{}_masked.png".format(0,num),0)
+        img = cv2.imread("/home/will/Downloads/ontable.jpeg",0)
+        #img = cv2.imread("/home/will/projects/legoproj/data/kpts_dset_{}/kpts/{}_masked.png".format(0,num),0)
         img = cv2.resize(img,(256,256),interpolation=cv2.INTER_LINEAR)
         
         #mask = cv2.imread(datapath + "studs_{}.png".format(num))
 
         pred = model.predict( np.reshape(img, (1,256,256,1)).astype('float32')/255.0 )
-        pred = 255 * np.reshape(pred, (256,256))
+        pred = (255.0 * np.reshape(pred, (256,256))).astype(np.uint8)
 
-        cv2.imshow("pred",pred)
+        outimg = cv2.resize(pred,(512,683),interpolation=cv2.INTER_LINEAR)
+
+        cv2.imshow("pred",outimg)
         cv2.waitKey(0)
 
         '''fig.add_subplot(2, 2, 1)
@@ -172,11 +223,16 @@ if args.predict:
 
     sys.exit()
 
+from keras import losses
 
 mynet = custom_unet((256,256,1))
-mynet.compile(optimizer="adam", loss=iou_cost)
+mynet.compile(optimizer="adam", loss=l2_loss)
 train_gen = UnetGenerator(False)
 val_gen = UnetGenerator(True)
+
+print(mynet.summary())
+
+#sys.exit()
 
 
 history = mynet.fit_generator(generator=train_gen,
@@ -185,7 +241,7 @@ history = mynet.fit_generator(generator=train_gen,
                     validation_steps=10,
                     use_multiprocessing=True,
                     workers=6,
-                    epochs=25)
+                    epochs=10)
 
 mynet.save("/home/will/projects/legoproj/nets/tstwing.h5")
 
