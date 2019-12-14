@@ -47,7 +47,7 @@ Far too many to list here when it comes to my lack of general CV/DL experience a
 
 * A reinforcement learning guess-rerender-refine approach to pose estimation or an iterative model as in this <a href="https://arxiv.org/pdf/1507.06550.pdf">human pose estimation method.</a> 
 
-* An approach requiring a network to learn a general voxelization for the combination presented.  The network would be trained to estimate each piece's rotation and translation in terms of another piece's voxelization-derived coordinate system.  Perhaps an convolutional encoder-decoder + recurrent architecture similar to that of image captioning could work in that system. 
+* An approach requiring a network to learn a general voxelization for the combination presented.  The network would be trained to estimate each piece's rotation and translation in terms of another piece's voxelization-derived coordinate system.  Perhaps an convolutional encoder-decoder + recurrent architecture similar to that of image captioning networks could work in such a system. 
 
 * I don't have any formal training or coursework in machine learning for computer vision so I could be wrong, but from my research it seems like a fully deep-learned pipeline encompassing all 3 stages would be impractical.  The need for fuzzy logic followed by structured 3D reasoning suggests a very convoluted design and painful design iteration times.  Pieces can be completely unique or could have modular similarity to one another ie: 2 2x2 bricks make a 4x2 brick.  Trying to train a network to accommodate these fundemental structural differences seems wrong... 
 
