@@ -6,7 +6,7 @@ import cv2
 class UnetGenerator(keras.utils.Sequence):
 
     #'Generates data for Keras'
-    def __init__(self, val, batch_size=6, dim=(32,32,32), n_channels=1,
+    def __init__(self, val, batch_size=5, dim=(32,32,32), n_channels=1,
                  n_classes=10, shuffle=True):
         #'Initialization'
         self.dim = dim

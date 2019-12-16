@@ -6,7 +6,7 @@ import cv2
 class UnetGenerator(keras.utils.Sequence):
 
     #'Generates data for Keras'
-    def __init__(self, val, batch_size=1, dim=(32,32,32), n_channels=1,
+    def __init__(self, val, batch_size=4, dim=(32,32,32), n_channels=1,
                  n_classes=10, shuffle=True):
         #'Initialization'
         self.dim = dim
@@ -29,7 +29,7 @@ class UnetGenerator(keras.utils.Sequence):
     def __len__(self):
         #'Denotes the number of batches per epoch'
         if self.val:
-            return 10
+            return 20
         return 100
 
 
@@ -51,8 +51,21 @@ class UnetGenerator(keras.utils.Sequence):
         # Generate data
         for i in range(self.batch_size):
 
-            i1 = random.randint(0,2)
-            i2 = random.randint(0,self.numdict[i1])
+            i1 = random.randint(0,24)
+            if i1 < 8:
+                i1 = 0
+            elif i1 < 12:
+                i1 = 1
+            else:
+                i1 = 2
+
+            inds = self.numdict[i1]
+            valsplit = int(.8 * inds)
+
+            if self.val:
+                i2 = random.randint(valsplit,inds)
+            else:
+                i2 = random.randint(0,valsplit)
 
             imgpath = (self.path + "{}_masked.png").format(i1,i2)
             maskpath = (self.path + "{}_kpts.png").format(i1,i2) 

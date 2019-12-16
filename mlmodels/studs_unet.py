@@ -75,7 +75,7 @@ def custom_unet(
     use_dropout_on_upsampling=True, 
     dropout=0.2, 
     dropout_change_per_layer=0.0,
-    filters=128,
+    filters=32,
     num_layers=6,
     output_activation='relu'): # 'sigmoid' or 'softmax'
     
@@ -98,14 +98,14 @@ def custom_unet(
         dropout += dropout_change_per_layer
         #filters = filters*2 # double the number of filters with each layer
 
-    x = conv2d_block(inputs=x, dila=5, filters=filters, use_batch_norm=use_batch_norm, dropout=dropout,padding=p)
+    x = conv2d_block(inputs=x, dila=2, filters=filters, use_batch_norm=use_batch_norm, dropout=dropout,padding=p)
 
     if not use_dropout_on_upsampling:
         dropout = 0.0
         dropout_change_per_layer = 0.0
 
     for conv in reversed(down_layers):        
-        filters =128#//= 2  decreasing number of filters with each layer 
+        filters =64#//= 2  decreasing number of filters with each layer 
         dropout -= dropout_change_per_layer
         x = upsample(filters, (2, 2), strides=(2, 2),padding=p) (x)
         x = concatenate([x, conv])
@@ -152,20 +152,11 @@ def iou_cost(ytrue,ypred):
     intersection = tf.math.multiply(ytrue,ypred)
     union = tf.math.subtract( tf.math.add(ytrue,ypred), intersection) 
 
-    intersection = tf.transpose(intersection,perm=[0,3,1,2])
-    union = tf.transpose(union,perm=[0,3,1,2])
-
-    intersection = tf.reshape(intersection, [5,5,-1])
-    union = tf.reshape(union, [5,5,-1])
+    intersection = tf.reshape(intersection, [4,-1])
+    union = tf.reshape(union, [4,-1])
 
     i = tf.reduce_sum(intersection,axis=-1)
     u = tf.reduce_sum(union,axis=-1)
-
-    iones = tf.ones(i.shape,dtype=tf.dtypes.float32)
-    uones = tf.ones(u.shape,dtype=tf.dtypes.float32)
-
-    #i = tf.math.maximum(i,iones)
-    #u = tf.math.maximum(u,uones)
 
     s = tf.math.abs(1 - (i/u))
 
@@ -174,20 +165,39 @@ def iou_cost(ytrue,ypred):
 
 
 def dice_loss(y_true, y_pred):
-    numerator = 2 * tf.reduce_sum(y_true * y_pred,axis=1)
-    denominator = tf.reduce_sum(y_true + y_pred,axis=1) + 1
+    numer = tf.multiply(y_true,y_pred)
+    denom = tf.add(y_true,y_pred)
+
+    numer = tf.reshape(numer,[4,-1])
+    denom = tf.reshape(denom,[4,-1])
+
+    numerator = 2 * tf.reduce_sum(numer,axis=1)
+    denominator = tf.reduce_sum(denom,axis=1) + 1
     return tf.reduce_sum(1 - numerator/denominator)
     #return 1 - numerator / denominator
 
 
+def l2_loss_weighted(y_true,y_pred):
+    diffs = tf.math.square(y_pred - y_true)
+    weighted_diffs = 10 *tf.multiply(y_true,diffs) + diffs/10.0
+    weighted_diffs = tf.reshape(weighted_diffs,[4,-1])
+
+    diffsums = tf.reduce_sum(weighted_diffs,axis=1)
+
+    return tf.reduce_sum(diffsums)
+
 def l2_loss(y_true,y_pred):
     diffs = tf.math.square(y_pred - y_true)
-    return tf.math.sqrt(tf.reduce_sum(diffs))
+    diffs = tf.reshape(diffs,[4,-1])
+
+    diffsums = tf.reduce_sum(diffs,axis=1)
+
+    return tf.reduce_sum(diffsums)
 
 
 if args.predict:
 
-    model = load_model("/home/will/projects/legoproj/nets/tst.h5",compile=False)
+    model = load_model("/home/will/projects/legoproj/nets/tstwing.h5",compile=False)
 
     while input("Predict?: ") != 'q':
 
@@ -195,8 +205,8 @@ if args.predict:
 
         #fig = plt.figure(figsize=(4, 4))
 
-        img = cv2.imread("/home/will/Downloads/ontable.jpeg",0)
-        #img = cv2.imread("/home/will/projects/legoproj/data/kpts_dset_{}/kpts/{}_masked.png".format(0,num),0)
+        #img = cv2.imread("/home/will/Downloads/ontable.jpeg",0)
+        img = cv2.imread("/home/will/projects/legoproj/data/kpts_dset_{}/kpts/{}_masked.png".format(0,num),0)
         img = cv2.resize(img,(256,256),interpolation=cv2.INTER_LINEAR)
         
         #mask = cv2.imread(datapath + "studs_{}.png".format(num))
@@ -204,7 +214,7 @@ if args.predict:
         pred = model.predict( np.reshape(img, (1,256,256,1)).astype('float32')/255.0 )
         pred = (255.0 * np.reshape(pred, (256,256))).astype(np.uint8)
 
-        outimg = cv2.resize(pred,(512,683),interpolation=cv2.INTER_LINEAR)
+        outimg = pred# cv2.resize(pred,(512,683),interpolation=cv2.INTER_LINEAR)
 
         cv2.imshow("pred",outimg)
         cv2.waitKey(0)
@@ -226,7 +236,7 @@ if args.predict:
 from keras import losses
 
 mynet = custom_unet((256,256,1))
-mynet.compile(optimizer="adam", loss=l2_loss)
+mynet.compile(optimizer=RMSprop(lr=5e-4), loss=l2_loss_weighted)
 train_gen = UnetGenerator(False)
 val_gen = UnetGenerator(True)
 
@@ -238,10 +248,10 @@ print(mynet.summary())
 history = mynet.fit_generator(generator=train_gen,
                     steps_per_epoch=100,
                     validation_data=val_gen,
-                    validation_steps=10,
-                    use_multiprocessing=True,
+                    validation_steps=20,
+                    use_multiprocessing=False,
                     workers=6,
-                    epochs=10)
+                    epochs=8)
 
 mynet.save("/home/will/projects/legoproj/nets/tstwing.h5")
 
