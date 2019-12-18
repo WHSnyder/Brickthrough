@@ -6,7 +6,7 @@ import cv2
 class UnetGenerator(keras.utils.Sequence):
 
     #'Generates data for Keras'
-    def __init__(self, val, batch_size=4, dim=(32,32,32), n_channels=1,
+    def __init__(self, val, batch_size=10, dim=(32,32,32), n_channels=1,
                  n_classes=10, shuffle=True):
         #'Initialization'
         self.dim = dim
@@ -18,9 +18,10 @@ class UnetGenerator(keras.utils.Sequence):
         self.shuffle = shuffle
         self.val = val
         self.on_epoch_end()
-        self.path = "/home/will/projects/legoproj/data/kpts_dset_{}/kpts/"
+        self.path = "/home/will/projects/legoproj/data/kpts_dset_{}/kpts_total/"
 
-        self.numdict = {0:890,1:410,2:1204}
+        #self.numdict = {0:890,1:410,2:1204}
+        self.numdict = {0:499,1:299,2:499}
 
 
         random.seed(0)
@@ -67,8 +68,10 @@ class UnetGenerator(keras.utils.Sequence):
             else:
                 i2 = random.randint(0,valsplit)
 
-            imgpath = (self.path + "{}_masked.png").format(i1,i2)
-            maskpath = (self.path + "{}_kpts.png").format(i1,i2) 
+            tag = "{:0>4}".format(i2)
+
+            imgpath = (self.path + "{}_img.png").format(i1,tag)
+            maskpath = (self.path + "{}_kpts.png").format(i1,tag) 
 
             img = cv2.imread(imgpath,0)
             img = cv2.resize(img,(256,256),interpolation=cv2.INTER_LINEAR)

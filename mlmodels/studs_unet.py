@@ -21,6 +21,7 @@ config = ConfigProto()
 config.gpu_options.allow_growth = True
 session = Session(config=config)
 
+import keras
 from keras.models import Model
 from keras.layers import BatchNormalization, Conv2D, Conv2DTranspose, MaxPooling2D, Dropout, UpSampling2D, Input, concatenate, AveragePooling2D
 from keras.models import load_model
@@ -51,18 +52,18 @@ def conv2d_block(
     use_batch_norm=True, 
     dropout=0.3, 
     filters=32, 
-    kernel_size=(4,4), 
+    kernel_size=(3,3), 
     activation='relu', 
     kernel_initializer='he_normal', 
     padding='same',
     dila=1):
     
-    c = Conv2D(filters, kernel_size, activation=activation, kernel_initializer=kernel_initializer, padding=padding, dilation_rate=dila) (inputs)
+    c = Conv2D(filters, kernel_size, activation=activation, kernel_initializer=kernel_initializer, padding=padding) (inputs)
     if use_batch_norm:
         c = BatchNormalization()(c)
     if dropout > 0.0:
         c = Dropout(dropout)(c)
-    c = Conv2D(filters, kernel_size, activation=activation, kernel_initializer=kernel_initializer, padding=padding, dilation_rate=dila) (c)
+    c = Conv2D(filters, kernel_size, activation=activation, kernel_initializer=kernel_initializer, padding=padding) (c)
     if use_batch_norm:
         c = BatchNormalization()(c)
     return c
@@ -73,10 +74,10 @@ def custom_unet(
     use_batch_norm=True, 
     upsample_mode='deconv', # 'deconv' or 'simple' 
     use_dropout_on_upsampling=True, 
-    dropout=0.2, 
-    dropout_change_per_layer=0.0,
-    filters=32,
-    num_layers=6,
+    dropout=0.3, 
+    dropout_change_per_layer=0.03,
+    filters=56,
+    num_layers=4,
     output_activation='relu'): # 'sigmoid' or 'softmax'
     
     p="same"
@@ -96,22 +97,27 @@ def custom_unet(
         down_layers.append(x)
         x = MaxPooling2D((2, 2),padding=p) (x)
         dropout += dropout_change_per_layer
-        #filters = filters*2 # double the number of filters with each layer
+        #filters*2 # double the number of filters with each layer
 
-    x = conv2d_block(inputs=x, dila=2, filters=filters, use_batch_norm=use_batch_norm, dropout=dropout,padding=p)
+    x = conv2d_block(inputs=x, dila=1, filters=filters, use_batch_norm=use_batch_norm, dropout=dropout,padding=p)
 
     if not use_dropout_on_upsampling:
         dropout = 0.0
         dropout_change_per_layer = 0.0
 
     for conv in reversed(down_layers):        
-        filters =64#//= 2  decreasing number of filters with each layer 
+        #//= 2  decreasing number of filters with each layer 
         dropout -= dropout_change_per_layer
         x = upsample(filters, (2, 2), strides=(2, 2),padding=p) (x)
         x = concatenate([x, conv])
-        x = conv2d_block(inputs=x, filters=filters, use_batch_norm=use_batch_norm, dropout=dropout, padding=p)
+        x = conv2d_block(inputs=x, filters=filters, use_batch_norm=use_batch_norm, dropout=dropout, padding=p,activation="relu")
+
+    #x = conv2d_block(inputs=x, filters=16, use_batch_norm=True, dropout=0.0, padding=p,activation="relu")
+
+    outputs = Conv2D(1, (3,3), activation="tanh", dilation_rate=3, padding=p) (x) 
     
-    outputs = Conv2D(1, (7,7), activation='sigmoid', padding=p) (x)    
+    #outputs = keras.activations.hard_sigmoid(outputs)
+   
     
     model = Model(inputs=[inputs], outputs=[outputs])
 
@@ -146,7 +152,6 @@ def simple_iou_cost(ytrue,ypred):
 
 
 
-
 def iou_cost(ytrue,ypred):
 
     intersection = tf.math.multiply(ytrue,ypred)
@@ -174,17 +179,56 @@ def dice_loss(y_true, y_pred):
     numerator = 2 * tf.reduce_sum(numer,axis=1)
     denominator = tf.reduce_sum(denom,axis=1) + 1
     return tf.reduce_sum(1 - numerator/denominator)
-    #return 1 - numerator / denominator
+
+
 
 
 def l2_loss_weighted(y_true,y_pred):
-    diffs = tf.math.square(y_pred - y_true)
-    weighted_diffs = 10 *tf.multiply(y_true,diffs) + diffs/10.0
-    weighted_diffs = tf.reshape(weighted_diffs,[4,-1])
+
+    posmask = y_true#tf.cast(y_true > .05,tf.float32)
+    negmask = 1 - y_true #tf.cast(y_true < .05,tf.float32)
+
+    diffs = tf.math.square((1+y_pred)/2 - y_true)
+
+    pos = posmask * diffs
+    negs = negmask * diffs
+
+    pos = tf.reshape(pos,[10,-1])
+    negs = tf.reshape(negs,[10,-1])
+
+    posmask = tf.reshape(posmask,[10,-1])
+    negmask = tf.reshape(negmask,[10,-1])
+
+    posweights = tf.reduce_sum(posmask,axis=1) + 1
+    negweights = tf.reduce_sum(negmask,axis=1) + 1
+
+    pos = tf.reduce_sum(pos,axis=1)
+    negs = tf.reduce_sum(negs,axis=1)
+    
+    #pos = pos / posweights
+    #negs = negs / negweights
+
+    pos = tf.reduce_sum(pos)
+    negs = tf.reduce_sum(negs)
+
+    return 3*pos + negs / 25
+
+
+
+def l2_loss_fleeba(y_true,y_pred):
+
+    posmask = tf.cast(y_true > .05,tf.float32)
+    negmask = tf.cast(y_true < .05,tf.float32)
+
+    diffs = tf.math.square((1+y_pred)/2 - y_true)
+
+    weighted_diffs = tf.multiply(trexp,diffs) + diffs/15.0
+    weighted_diffs = tf.reshape(weighted_diffs,[10,-1])
 
     diffsums = tf.reduce_sum(weighted_diffs,axis=1)
 
     return tf.reduce_sum(diffsums)
+
 
 def l2_loss(y_true,y_pred):
     diffs = tf.math.square(y_pred - y_true)
@@ -206,15 +250,17 @@ if args.predict:
         #fig = plt.figure(figsize=(4, 4))
 
         #img = cv2.imread("/home/will/Downloads/ontable.jpeg",0)
-        img = cv2.imread("/home/will/projects/legoproj/data/kpts_dset_{}/kpts/{}_masked.png".format(0,num),0)
+        tag = "{:0>4}".format(num)
+        img = cv2.imread("/home/will/projects/legoproj/data/kpts_dset_{}/kpts_total/{}_img.png".format(0,tag),0)
         img = cv2.resize(img,(256,256),interpolation=cv2.INTER_LINEAR)
         
         #mask = cv2.imread(datapath + "studs_{}.png".format(num))
 
         pred = model.predict( np.reshape(img, (1,256,256,1)).astype('float32')/255.0 )
-        pred = (255.0 * np.reshape(pred, (256,256))).astype(np.uint8)
+        #pred = (255.0 * np.reshape(pred, (256,256))).astype(np.uint8)
+        pred = (255.0 * np.reshape((1.0+pred)/2.0, (256,256))).astype(np.uint8)
 
-        outimg = pred# cv2.resize(pred,(512,683),interpolation=cv2.INTER_LINEAR)
+        outimg = cv2.resize(pred,(512,512),interpolation=cv2.INTER_LINEAR)
 
         cv2.imshow("pred",outimg)
         cv2.waitKey(0)
@@ -251,14 +297,14 @@ history = mynet.fit_generator(generator=train_gen,
                     validation_steps=20,
                     use_multiprocessing=False,
                     workers=6,
-                    epochs=8)
+                    epochs=12)
 
 mynet.save("/home/will/projects/legoproj/nets/tstwing.h5")
 
-
+print(history.history['loss'])
 # "Loss"
-plt.plot(history.history['loss'])
-plt.plot(history.history['val_loss'])
+plt.plot(history.history['loss'][1:])
+plt.plot(history.history['val_loss'][1:])
 plt.title('model loss')
 plt.ylabel('loss')
 plt.xlabel('epoch')

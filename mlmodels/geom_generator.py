@@ -3,10 +3,10 @@ import keras
 import random
 import cv2
 
-class Geom_Generator(keras.utils.Sequence):
+class GeomGenerator(keras.utils.Sequence):
 
     #'Generates data for Keras'
-    def __init__(self, val, batch_size=5, dim=(32,32,32), n_channels=1,
+    def __init__(self, val, batch_size=10, dim=(32,32,32), n_channels=1,
                  n_classes=10, shuffle=True):
         #'Initialization'
         self.dim = dim
@@ -18,9 +18,10 @@ class Geom_Generator(keras.utils.Sequence):
         self.shuffle = shuffle
         self.val = val
         self.on_epoch_end()
-        self.path = "/home/will/projects/legoproj/data/{}_geom/"
+        self.path = "/home/will/projects/legoproj/data/kpts_dset_{}/"
 
-        self.mapping = {0:198,1:519,2:251,3:477,4:237,5:236,6:38}
+        self.numdict = {0:499}#,1:410,2:1204}
+
 
         random.seed(0)
 
@@ -50,26 +51,24 @@ class Geom_Generator(keras.utils.Sequence):
         # Generate data
         for i in range(self.batch_size):
 
-            i1 = random.randint(0,6)
-            i2 = random.randint(0,self.mapping[i1]-1)
+            i1 = random.randint(0,0)
+            i2 = random.randint(0,self.numdict[i1])
 
-            imgpath = (self.path + "{}.png").format(i1,i2)
-            maskpath = (self.path + "{}_geom.png").format(i1,i2) 
+            tag = "{:0>4}".format(i2)
+
+            imgpath = (self.path + "{}_a.png").format(i1,tag)
+            geompath = (self.path + "geom/" + "{}_geom.png").format(i1,tag) 
 
             img = cv2.imread(imgpath,0)
-            img = cv2.resize(img,(128,128),interpolation=cv2.INTER_LINEAR)
-            img = np.reshape(img,(128,128,1))
+            img = cv2.resize(img,(256,256),interpolation=cv2.INTER_LINEAR)
+            img = np.reshape(img,(256,256,1))
 
-            mask = cv2.imread(maskpath)
-            mask = cv2.resize(mask,(128,128),interpolation=cv2.INTER_LINEAR)
-            mask = np.reshape(mask,(128,128,3))
-
+            geom = cv2.imread(geompath)
+            
             x.append(img)
-            y.append(mask)
-
+            y.append(geom)
 
         x = np.array(x).astype('float32')/255.0
         y = np.array(y).astype('float32')/255.0
-
 
         return x,y
