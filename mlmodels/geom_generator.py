@@ -71,6 +71,8 @@ class GeomGenerator(keras.utils.Sequence):
             img = np.reshape(img,(256,256,1))
 
             geom = cv2.imread(geompath)
+            dummy = np.zeros((256,256,1),dtype="uint8")
+            geom = np.concatenate((geom,dummy),axis=-1)
             
             x.append(img)
             y.append(geom)

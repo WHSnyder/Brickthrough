@@ -26,6 +26,7 @@ from keras.models import Model
 from keras.layers import BatchNormalization, Conv2D, Conv2DTranspose, MaxPooling2D, Dropout, UpSampling2D, Input, concatenate, AveragePooling2D
 from keras.models import load_model
 from keras.optimizers import RMSprop,Adamax
+import keras.backend as K
 
 
 import argparse
@@ -76,7 +77,7 @@ def custom_unet(
     use_dropout_on_upsampling=True, 
     dropout=0.3, 
     dropout_change_per_layer=0.03,
-    filters=64,
+    filters=56,
     num_layers=5,
     output_activation='relu'): # 'sigmoid' or 'softmax'
     
@@ -112,16 +113,22 @@ def custom_unet(
         x = concatenate([x, conv])
         x = conv2d_block(inputs=x, filters=filters, use_batch_norm=use_batch_norm, dropout=dropout, padding=p,activation="relu")
 
-    outputs = Conv2D(3, (3,3), activation="hard_sigmoid", dilation_rate=2, padding=p) (x) 
+    #outputs = Conv2D(3, (3,3), activation="tanh", padding=p) (x)
+    geom_output = Conv2D(3, (3,3), activation="tanh", padding=p) (x)
+    error_output = Conv2D(1, (3,3), activation="sigmoid", padding=p)(x)
+
+    outputs = concatenate([geom_output,error_output])
+
+    print("Output shape:\n\n")
+    print(outputs)
+    print(K.int_shape(outputs))
     
     model = Model(inputs=[inputs], outputs=[outputs])
 
     return model
 
 
-
 ###################################################################################################
-
 
 
 def geom_loss(y_true, y_pred):
@@ -137,42 +144,64 @@ def geom_loss(y_true, y_pred):
 
 
 
-def l2_loss_weighted(y_true,y_pred):
+def geom_loss_bayes(y_true, y_pred):
 
-    posmask = y_true#tf.cast(y_true > .05,tf.float32)
-    negmask = 1 - y_true #tf.cast(y_true < .05,tf.float32)
+    y_true = tf.slice(y_true,[0,0,0,0],[-1,-1,-1,3])
 
-    diffs = tf.math.square((1+y_pred)/2 - y_true)
+    geom_out = tf.slice(y_pred,[0,0,0,0],[-1,-1,-1,3])
+    error_out = tf.slice(y_pred,[0,0,0,3],[-1,-1,-1,1])
+   
+    es = tf.shape(error_out)
+    error_out = tf.reshape(error_out,[-1,es[1],es[2]])
 
-    pos = posmask * diffs
-    negs = negmask * diffs
+    posmask = tf.cast(y_true > .0001,tf.float32)
+    posmask = tf.reduce_max(posmask,axis=-1)
+    masks_sum = tf.reduce_sum(posmask)
 
-    pos = tf.reshape(pos,[10,-1])
-    negs = tf.reshape(negs,[10,-1])
+    geom_diffs_raw = tf.math.abs((1+geom_out)/2 - y_true, name="diffs_raw")
+    geom_diffs = tf.reduce_sum(geom_diffs_raw,axis=-1)
+    geom_diffs_mean = tf.reduce_sum(posmask * geom_diffs) / masks_sum
 
-    posmask = tf.reshape(posmask,[10,-1])
-    negmask = tf.reshape(negmask,[10,-1])
+    geom_diffs_mean = tf.reduce_mean(geom_diffs_raw,axis=-1,name="diffs_mean")
+    error_pred_loss = tf.math.abs( geom_diffs_mean - error_out,name="maybe" )
+    error_pred_loss = tf.reduce_sum(posmask * error_pred_loss) / masks_sum
 
-    posweights = tf.reduce_sum(posmask,axis=1) + 1
-    negweights = tf.reduce_sum(negmask,axis=1) + 1
+    return 10 * geom_diffs_mean + error_pred_loss
 
-    pos = tf.reduce_sum(pos,axis=1)
-    negs = tf.reduce_sum(negs,axis=1)
-    
-    #pos = pos / posweights
-    #negs = negs / negweights
 
-    pos = tf.reduce_sum(pos)
-    negs = tf.reduce_sum(negs)
 
-    return 3*pos + negs / 25
+def geom_loss_bayes_(y_true, y_pred):
+
+    y_true = tf.slice(y_true,[0,0,0,0],[-1,-1,-1,3])
+
+    geom_out = tf.slice(y_pred,[0,0,0,0],[-1,-1,-1,3])
+    error_out = tf.slice(y_pred,[0,0,0,3],[-1,-1,-1,1])
+   
+    es = tf.shape(error_out)
+    error_out = tf.reshape(error_out,[-1,es[1],es[2]])
+
+    posmask = tf.cast(y_true > .0001,tf.float32)
+    posmask = tf.reduce_max(posmask,axis=-1)
+    masks_sum = tf.reduce_sum(posmask)
+
+    geom_diffs_raw = tf.math.abs((1+geom_out)/2 - y_true, name="diffs_raw")
+    geom_diffs = tf.reduce_sum(geom_diffs_raw,axis=-1)
+    geom_diffs_mean = tf.reduce_sum(posmask * geom_diffs) / masks_sum
+
+    geom_diffs_mean = tf.reduce_mean(geom_diffs_raw,axis=-1,name="diffs_mean")
+    error_pred_loss = tf.math.abs( geom_diffs_mean - error_out,name="maybe" )
+    error_pred_loss = tf.reduce_sum(posmask * error_pred_loss) / masks_sum
+
+    return geom_diffs_mean# + error_pred_loss
+
+
 
 
 
 
 if args.predict:
 
-    model = load_model("/home/will/projects/legoproj/nets/tstgeom_pole.h5",compile=False)
+    model = load_model("/home/will/projects/legoproj/nets/tstgeom_pole_bayes.h5",compile=False)
 
     while input("Predict?: ") != 'q':
 
@@ -190,25 +219,38 @@ if args.predict:
         pred = model.predict( np.reshape(img, (1,256,256,1)).astype('float32')/255.0 )
         #pred = (255.0 * np.reshape(pred, (256,256))).astype(np.uint8)
         #pred = (255.0 * np.reshape((1.0+pred)/2.0, (256,256,3))).astype(np.uint8)
-        pred = (255.0 * np.reshape(pred, (256,256,3))).astype(np.uint8)
 
-        outimg = cv2.resize(pred,(512,512),interpolation=cv2.INTER_LINEAR)
+        geom_out = pred[0,:,:,0:3]
+        error_out = np.reshape( pred[0,:,:,3:], (256,256) )
 
-        cv2.imshow("pred",outimg)
+        geom_pred = (255.0 * geom_out).astype(np.uint8)
+        error_pred = (255.0 * error_out).astype(np.uint8)
+
+        
+        #pred = (255.0 * np.reshape(pred, (256,256,3))).astype(np.uint8)
+
+        #outimg = cv2.resize(pred,(512,512),interpolation=cv2.INTER_LINEAR)
+
+        cv2.imshow("pred",cv2.resize(geom_pred,(512,512),interpolation=cv2.INTER_LINEAR))
         cv2.waitKey(0)
 
-
+        cv2.imshow("error",cv2.resize(error_pred,(512,512),interpolation=cv2.INTER_LINEAR))
+        cv2.waitKey(0)
 
     sys.exit()
 
-from keras import losses
+
+
+#from keras import losses
 
 mynet = custom_unet((256,256,1))
-mynet.compile(optimizer=RMSprop(lr=4e-4), loss=geom_loss)
+#mynet.compile(optimizer=RMSprop(lr=4e-4), loss=geom_loss)
+mynet.compile(optimizer="Adam", loss=geom_loss_bayes)
+
 train_gen = GeomGenerator(False)
 val_gen = GeomGenerator(True)
 
-print(mynet.summary())
+#print(mynet.summary())
 
 #sys.exit()
 
@@ -219,9 +261,9 @@ history = mynet.fit_generator(generator=train_gen,
                     validation_steps=20,
                     use_multiprocessing=False,
                     workers=6,
-                    epochs=15)
+                    epochs=10)
 
-mynet.save("/home/will/projects/legoproj/nets/tstgeom_pole.h5")
+mynet.save("/home/will/projects/legoproj/nets/tstgeom_pole_bayes.h5")
 
 print(history.history['loss'])
 # "Loss"
