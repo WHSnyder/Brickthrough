@@ -114,16 +114,16 @@ def custom_unet(
         x = conv2d_block(inputs=x, filters=filters, use_batch_norm=use_batch_norm, dropout=dropout, padding=p,activation="relu")
 
     #outputs = Conv2D(3, (3,3), activation="tanh", padding=p) (x)
-    geom_output = Conv2D(3, (3,3), activation="tanh", padding=p) (x)
-    error_output = Conv2D(1, (3,3), activation="sigmoid", padding=p)(x)
+    geom_output = Conv2D(3, (3,3), activation="hard_sigmoid", padding=p) (x)
+    #error_output = Conv2D(1, (3,3), activation="sigmoid", padding=p)(x)
 
-    outputs = concatenate([geom_output,error_output])
+    #outputs = concatenate([geom_output,error_output])
 
-    print("Output shape:\n\n")
-    print(outputs)
-    print(K.int_shape(outputs))
+    #print("Output shape:\n\n")
+    #print(outputs)
+    #print(K.int_shape(outputs))
     
-    model = Model(inputs=[inputs], outputs=[outputs])
+    model = Model(inputs=[inputs], outputs=[geom_output])
 
     return model
 
@@ -170,29 +170,20 @@ def geom_loss_bayes(y_true, y_pred):
 
 
 
-def geom_loss_bayes_(y_true, y_pred):
-
-    y_true = tf.slice(y_true,[0,0,0,0],[-1,-1,-1,3])
-
-    geom_out = tf.slice(y_pred,[0,0,0,0],[-1,-1,-1,3])
-    error_out = tf.slice(y_pred,[0,0,0,3],[-1,-1,-1,1])
-   
-    es = tf.shape(error_out)
-    error_out = tf.reshape(error_out,[-1,es[1],es[2]])
+def geom_loss_bayes_simpler(y_true, y_pred):
 
     posmask = tf.cast(y_true > .0001,tf.float32)
     posmask = tf.reduce_max(posmask,axis=-1)
-    masks_sum = tf.reduce_sum(posmask)
 
-    geom_diffs_raw = tf.math.abs((1+geom_out)/2 - y_true, name="diffs_raw")
-    geom_diffs = tf.reduce_sum(geom_diffs_raw,axis=-1)
-    geom_diffs_mean = tf.reduce_sum(posmask * geom_diffs) / masks_sum
+    #diffs = tf.math.abs((1+y_pred)/2 - y_true)
+    diffs = tf.math.square(y_pred - y_true)
 
-    geom_diffs_mean = tf.reduce_mean(geom_diffs_raw,axis=-1,name="diffs_mean")
-    error_pred_loss = tf.math.abs( geom_diffs_mean - error_out,name="maybe" )
-    error_pred_loss = tf.reduce_sum(posmask * error_pred_loss) / masks_sum
+    diffs = tf.reduce_sum(diffs,axis=-1)
+    diffsmasked = posmask * diffs
 
-    return geom_diffs_mean# + error_pred_loss
+    masksum = tf.reduce_sum(posmask)
+
+    return tf.reduce_sum(diffsmasked)
 
 
 
@@ -213,29 +204,53 @@ if args.predict:
         tag = "{:0>4}".format(num)
         img = cv2.imread("/home/will/projects/legoproj/data/kpts_dset_{}/{}_a.png".format(3,tag),0)
         img = cv2.resize(img,(256,256),interpolation=cv2.INTER_LINEAR)
+
+        geomraw = cv2.imread("/home/will/projects/legoproj/data/kpts_dset_{}/geom/{}_geom.png".format(3,tag))
+        geom = cv2.cvtColor(geomraw,cv2.COLOR_BGR2GRAY)
+        geom = cv2.inRange(geom,2,255)
+        geom = cv2.resize(geom,(512,512),interpolation=cv2.INTER_LINEAR)
+
+        geomraw = cv2.resize(geomraw,(512,512),interpolation=cv2.INTER_LINEAR)
+
+
         
         #mask = cv2.imread(datapath + "studs_{}.png".format(num))
 
         pred = model.predict( np.reshape(img, (1,256,256,1)).astype('float32')/255.0 )
-        #pred = (255.0 * np.reshape(pred, (256,256))).astype(np.uint8)
-        #pred = (255.0 * np.reshape((1.0+pred)/2.0, (256,256,3))).astype(np.uint8)
+        #pred = (255.0 * np.reshape(pred, (256,256,3))).astype(np.uint8)
+        pred = (255.0 * np.reshape((1.0+pred)/2.0, (256,256,3))).astype(np.uint8)
 
-        geom_out = pred[0,:,:,0:3]
-        error_out = np.reshape( pred[0,:,:,3:], (256,256) )
+        #geom_out = pred[0,:,:,0:3]
+        #error_out = np.reshape( pred[0,:,:,3:], (256,256) )
 
-        geom_pred = (255.0 * geom_out).astype(np.uint8)
-        error_pred = (255.0 * error_out).astype(np.uint8)
+        #geom_pred = (255.0 * geom_out).astype(np.uint8)
+        #error_pred = (255.0 * error_out).astype(np.uint8)
 
         
         #pred = (255.0 * np.reshape(pred, (256,256,3))).astype(np.uint8)
 
-        #outimg = cv2.resize(pred,(512,512),interpolation=cv2.INTER_LINEAR)
+        outimg = cv2.resize(pred,(512,512),interpolation=cv2.INTER_LINEAR)
+        outimg = cv2.bitwise_and(outimg,outimg,mask=geom)
 
-        cv2.imshow("pred",cv2.resize(geom_pred,(512,512),interpolation=cv2.INTER_LINEAR))
+
+        #diffs = (255 * diffs/np.amax(diffs)).astype(np.uint8)
+
+
+        cv2.imshow("out",outimg)
         cv2.waitKey(0)
 
-        cv2.imshow("error",cv2.resize(error_pred,(512,512),interpolation=cv2.INTER_LINEAR))
+        geomraw = geomraw.astype(np.float32)
+        outimg = outimg.astype(np.float32)
+        diffs = np.absolute( geomraw - outimg ).astype(np.uint8)
+
+        cv2.imshow("diffs",diffs)
         cv2.waitKey(0)
+
+        #cv2.imshow("pred",cv2.resize(pred,(512,512),interpolation=cv2.INTER_LINEAR))
+        #cv2.waitKey(0)
+
+        #cv2.imshow("error",cv2.resize(error_pred,(512,512),interpolation=cv2.INTER_LINEAR))
+        #cv2.waitKey(0)
 
     sys.exit()
 
@@ -245,7 +260,7 @@ if args.predict:
 
 mynet = custom_unet((256,256,1))
 #mynet.compile(optimizer=RMSprop(lr=4e-4), loss=geom_loss)
-mynet.compile(optimizer="Adam", loss=geom_loss_bayes)
+mynet.compile(optimizer=RMSprop(lr=4e-4), loss=geom_loss_bayes_simpler)
 
 train_gen = GeomGenerator(False)
 val_gen = GeomGenerator(True)
@@ -261,9 +276,9 @@ history = mynet.fit_generator(generator=train_gen,
                     validation_steps=20,
                     use_multiprocessing=False,
                     workers=6,
-                    epochs=10)
+                    epochs=15)
 
-mynet.save("/home/will/projects/legoproj/nets/tstgeom_pole_bayes.h5")
+mynet.save("/home/will/projects/legoproj/nets/tstgeom_pole_bayes_sig.h5")
 
 print(history.history['loss'])
 # "Loss"
