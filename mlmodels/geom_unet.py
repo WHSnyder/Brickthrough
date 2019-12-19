@@ -239,9 +239,9 @@ if args.predict:
 
         #fig = plt.figure(figsize=(4, 4))
 
-        img = cv2.imread("/home/will/Downloads/ontable.jpeg",0)
+        #img = cv2.imread("/home/will/Downloads/ontable.jpeg",0)
         tag = "{:0>4}".format(num)
-        #img = cv2.imread("/home/will/projects/legoproj/data/kpts_dset_{}/{}_a.png".format(0,tag),0)
+        img = cv2.imread("/home/will/projects/legoproj/data/kpts_dset_{}/{}_a.png".format(1,tag),0)
         img = cv2.resize(img,(256,256),interpolation=cv2.INTER_LINEAR)
         
         #mask = cv2.imread(datapath + "studs_{}.png".format(num))
@@ -277,7 +277,7 @@ history = mynet.fit_generator(generator=train_gen,
                     validation_steps=20,
                     use_multiprocessing=False,
                     workers=6,
-                    epochs=10)
+                    epochs=15)
 
 mynet.save("/home/will/projects/legoproj/nets/tstgeom.h5")
 

@@ -20,7 +20,7 @@ class GeomGenerator(keras.utils.Sequence):
         self.on_epoch_end()
         self.path = "/home/will/projects/legoproj/data/kpts_dset_{}/"
 
-        self.numdict = {0:499}#,1:410,2:1204}
+        self.numdict = {0:499,1:299,2:499}#,1:410,2:1204}
 
 
         random.seed(0)
@@ -51,7 +51,7 @@ class GeomGenerator(keras.utils.Sequence):
         # Generate data
         for i in range(self.batch_size):
 
-            i1 = random.randint(0,0)
+            i1 = random.randint(0,2)
             i2 = random.randint(0,self.numdict[i1])
 
             tag = "{:0>4}".format(i2)
