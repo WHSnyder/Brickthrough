@@ -6,7 +6,7 @@ import cv2
 class GeomGenerator(keras.utils.Sequence):
 
     #'Generates data for Keras'
-    def __init__(self, val, batch_size=10, dim=(32,32,32), n_channels=1,
+    def __init__(self, val, batch_size=8, dim=(32,32,32), n_channels=1,
                  n_classes=10, shuffle=True):
         #'Initialization'
         self.dim = dim
@@ -51,8 +51,15 @@ class GeomGenerator(keras.utils.Sequence):
         # Generate data
         for i in range(self.batch_size):
 
-            i1 = random.randint(0,2)
-            i2 = random.randint(0,self.numdict[i1])
+            #i1 = random.randint(0,2)
+            #i2 = random.randint(0,self.numdict[i1])
+
+            i1 = random.randint(3,6)
+
+            if self.val:
+                i2 = random.randint(180,199)
+            else:
+                i2 = random.randint(0,180)
 
             tag = "{:0>4}".format(i2)
 

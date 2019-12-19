@@ -76,7 +76,7 @@ def custom_unet(
     use_dropout_on_upsampling=True, 
     dropout=0.3, 
     dropout_change_per_layer=0.03,
-    filters=50,
+    filters=64,
     num_layers=5,
     output_activation='relu'): # 'sigmoid' or 'softmax'
     
@@ -112,60 +112,15 @@ def custom_unet(
         x = concatenate([x, conv])
         x = conv2d_block(inputs=x, filters=filters, use_batch_norm=use_batch_norm, dropout=dropout, padding=p,activation="relu")
 
-    #x = conv2d_block(inputs=x, filters=16, use_batch_norm=True, dropout=0.0, padding=p,activation="relu")
-
-    outputs = Conv2D(3, (1,1), activation="tanh", padding=p) (x) 
-    
-    #outputs = keras.activations.hard_sigmoid(outputs)
-   
+    outputs = Conv2D(3, (3,3), activation="hard_sigmoid", dilation_rate=2, padding=p) (x) 
     
     model = Model(inputs=[inputs], outputs=[outputs])
 
     return model
 
+
+
 ###################################################################################################
-###################################################################################################
-###################################################################################################
-
-def simple_iou_cost(ytrue,ypred):
-
-    intersection = tf.math.multiply(ytrue,ypred)
-    union = tf.math.subtract( tf.math.add(ytrue,ypred), intersection)
-
-    imask = tf.ones(tf.shape(intersection),dtype=tf.dtypes.float32)/2.0
-    umask = tf.ones(tf.shape(union),dtype=tf.dtypes.float32)/2.0
-
-    imask = tf.keras.backend.greater(intersection,imask)
-    umask = tf.keras.backend.greater(union,umask)
-
-    imask = tf.dtypes.cast(imask, tf.float32)
-    umask = tf.dtypes.cast(umask, tf.float32)
-
-    i = tf.reduce_sum(imask)
-    u = tf.reduce_sum(umask) + 1
-
-    #i = tf.reduce_sum(intersection)
-    #u = tf.reduce_sum(union)
-
-    return tf.math.abs(1 - (i/u))
-
-
-
-
-def iou_cost(ytrue,ypred):
-
-    intersection = tf.math.multiply(ytrue,ypred)
-    union = tf.math.subtract( tf.math.add(ytrue,ypred), intersection) 
-
-    intersection = tf.reshape(intersection, [4,-1])
-    union = tf.reshape(union, [4,-1])
-
-    i = tf.reduce_sum(intersection,axis=-1)
-    u = tf.reduce_sum(union,axis=-1)
-
-    s = tf.math.abs(1 - (i/u))
-
-    return tf.reduce_sum(s)
 
 
 
@@ -173,12 +128,12 @@ def geom_loss(y_true, y_pred):
 
     posmask = tf.cast(y_true > .0001,tf.float32)
 
-    diffs = tf.math.square((1+y_pred)/2 - y_true)
+    #diffs = tf.math.square((1+y_pred)/2 - y_true)
+    diffs = tf.math.square(y_pred - y_true)
 
     diffsmasked = posmask * diffs
 
     return tf.reduce_sum(diffsmasked)
-
 
 
 
@@ -214,24 +169,10 @@ def l2_loss_weighted(y_true,y_pred):
 
 
 
-def l2_loss_fleeba(y_true,y_pred):
-
-    posmask = tf.cast(y_true > .05,tf.float32)
-    negmask = tf.cast(y_true < .05,tf.float32)
-
-    diffs = tf.math.square((1+y_pred)/2 - y_true)
-
-    weighted_diffs = tf.multiply(trexp,diffs) + diffs/15.0
-    weighted_diffs = tf.reshape(weighted_diffs,[10,-1])
-
-    diffsums = tf.reduce_sum(weighted_diffs,axis=1)
-
-    return tf.reduce_sum(diffsums)
-
 
 if args.predict:
 
-    model = load_model("/home/will/projects/legoproj/nets/tstgeom.h5",compile=False)
+    model = load_model("/home/will/projects/legoproj/nets/tstgeom_pole.h5",compile=False)
 
     while input("Predict?: ") != 'q':
 
@@ -241,14 +182,15 @@ if args.predict:
 
         #img = cv2.imread("/home/will/Downloads/ontable.jpeg",0)
         tag = "{:0>4}".format(num)
-        img = cv2.imread("/home/will/projects/legoproj/data/kpts_dset_{}/{}_a.png".format(1,tag),0)
+        img = cv2.imread("/home/will/projects/legoproj/data/kpts_dset_{}/{}_a.png".format(3,tag),0)
         img = cv2.resize(img,(256,256),interpolation=cv2.INTER_LINEAR)
         
         #mask = cv2.imread(datapath + "studs_{}.png".format(num))
 
         pred = model.predict( np.reshape(img, (1,256,256,1)).astype('float32')/255.0 )
         #pred = (255.0 * np.reshape(pred, (256,256))).astype(np.uint8)
-        pred = (255.0 * np.reshape((1.0+pred)/2.0, (256,256,3))).astype(np.uint8)
+        #pred = (255.0 * np.reshape((1.0+pred)/2.0, (256,256,3))).astype(np.uint8)
+        pred = (255.0 * np.reshape(pred, (256,256,3))).astype(np.uint8)
 
         outimg = cv2.resize(pred,(512,512),interpolation=cv2.INTER_LINEAR)
 
@@ -279,7 +221,7 @@ history = mynet.fit_generator(generator=train_gen,
                     workers=6,
                     epochs=15)
 
-mynet.save("/home/will/projects/legoproj/nets/tstgeom.h5")
+mynet.save("/home/will/projects/legoproj/nets/tstgeom_pole.h5")
 
 print(history.history['loss'])
 # "Loss"
