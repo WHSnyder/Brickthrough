@@ -77,7 +77,7 @@ def custom_unet(
     use_dropout_on_upsampling=True, 
     dropout=0.3, 
     dropout_change_per_layer=0.03,
-    filters=56,
+    filters=64,
     num_layers=5,
     output_activation='relu'): # 'sigmoid' or 'softmax'
     
@@ -114,7 +114,7 @@ def custom_unet(
         x = conv2d_block(inputs=x, filters=filters, use_batch_norm=use_batch_norm, dropout=dropout, padding=p,activation="relu")
 
     #outputs = Conv2D(3, (3,3), activation="tanh", padding=p) (x)
-    geom_output = Conv2D(3, (3,3), activation="hard_sigmoid", padding=p) (x)
+    geom_output = Conv2D(3, (3,3), activation="tanh", padding=p) (x)
     #error_output = Conv2D(1, (3,3), activation="sigmoid", padding=p)(x)
 
     #outputs = concatenate([geom_output,error_output])
@@ -175,8 +175,8 @@ def geom_loss_bayes_simpler(y_true, y_pred):
     posmask = tf.cast(y_true > .0001,tf.float32)
     posmask = tf.reduce_max(posmask,axis=-1)
 
-    #diffs = tf.math.abs((1+y_pred)/2 - y_true)
-    diffs = tf.math.square(y_pred - y_true)
+    diffs = tf.math.abs((1+y_pred)/2 - y_true)
+    #diffs = tf.math.square(y_pred - y_true)
 
     diffs = tf.reduce_sum(diffs,axis=-1)
     diffsmasked = posmask * diffs
@@ -192,7 +192,7 @@ def geom_loss_bayes_simpler(y_true, y_pred):
 
 if args.predict:
 
-    model = load_model("/home/will/projects/legoproj/nets/tstgeom_pole_bayes.h5",compile=False)
+    model = load_model("/home/will/projects/legoproj/nets/tstgeom_poleeng_bayes.h5",compile=False)
 
     while input("Predict?: ") != 'q':
 
@@ -230,7 +230,7 @@ if args.predict:
         #pred = (255.0 * np.reshape(pred, (256,256,3))).astype(np.uint8)
 
         outimg = cv2.resize(pred,(512,512),interpolation=cv2.INTER_LINEAR)
-        outimg = cv2.bitwise_and(outimg,outimg,mask=geom)
+        #
 
 
         #diffs = (255 * diffs/np.amax(diffs)).astype(np.uint8)
@@ -239,6 +239,7 @@ if args.predict:
         cv2.imshow("out",outimg)
         cv2.waitKey(0)
 
+        outimg = cv2.bitwise_and(outimg,outimg,mask=geom)
         geomraw = geomraw.astype(np.float32)
         outimg = outimg.astype(np.float32)
         diffs = np.absolute( geomraw - outimg ).astype(np.uint8)
@@ -258,7 +259,9 @@ if args.predict:
 
 #from keras import losses
 
-mynet = custom_unet((256,256,1))
+#mynet = custom_unet((256,256,1))
+mynet = load_model("/home/will/projects/legoproj/nets/tstgeom_pole_bayes.h5",compile=False)
+
 #mynet.compile(optimizer=RMSprop(lr=4e-4), loss=geom_loss)
 mynet.compile(optimizer=RMSprop(lr=4e-4), loss=geom_loss_bayes_simpler)
 
@@ -276,9 +279,9 @@ history = mynet.fit_generator(generator=train_gen,
                     validation_steps=20,
                     use_multiprocessing=False,
                     workers=6,
-                    epochs=15)
+                    epochs=20)
 
-mynet.save("/home/will/projects/legoproj/nets/tstgeom_pole_bayes_sig.h5")
+mynet.save("/home/will/projects/legoproj/nets/tstgeom_poleeng_bayes.h5")
 
 print(history.history['loss'])
 # "Loss"
