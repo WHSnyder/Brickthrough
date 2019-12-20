@@ -169,7 +169,7 @@ def geom_loss_bayes(y_true, y_pred):
     error_pred_loss = tf.math.abs(geom_diffs_mean - error_out, name="maybe")
     error_pred_loss = tf.reduce_sum(((.1 * negmask) + posmask) * error_pred_loss)
 
-    return geom_diffs_sum + error_pred_loss / 10
+    return geom_diffs_sum + error_pred_loss
 
 
 
@@ -220,7 +220,7 @@ def vizWithError(input_img,pred,true_geom):
     cv2.waitKey(0)
 
     error_pred = cv2.resize(error_pred,(512,512),cv2.INTER_LINEAR)
-    error_pred = cv2.bitwise_and(error_pred,error_pred,mask=geommask)
+    #error_pred = cv2.bitwise_and(error_pred,error_pred,mask=geommask)
     cv2.imshow("error est",error_pred)
     cv2.waitKey(0)
 
@@ -240,13 +240,15 @@ if args.predict:
 
         num = input("Num? ")
 
-
-        #img = cv2.imread("/home/will/Downloads/ontable.jpeg",0)
-        tag = "{:0>4}".format(num)
-        img = cv2.imread("/home/will/projects/legoproj/data/kpts_dset_{}/{}_a.png".format(3,tag),0)
+        if num == "t":
+            img = cv2.imread("/home/will/Downloads/ontable.jpeg",0)
+        else:
+            tag = "{:0>4}".format(num)
+            img = cv2.imread("/home/will/projects/legoproj/data/kpts_dset_{}/{}_a.png".format(6,tag),0)
+        
         img = cv2.resize(img,(256,256),interpolation=cv2.INTER_LINEAR)
 
-        geomraw = cv2.imread("/home/will/projects/legoproj/data/kpts_dset_{}/geom/{}_geom.png".format(3,tag))
+        geomraw = cv2.imread("/home/will/projects/legoproj/data/kpts_dset_{}/geom/{}_geom.png".format(6,tag))
         
         geom = cv2.cvtColor(geomraw,cv2.COLOR_BGR2GRAY)
         geom = cv2.inRange(geom,2,255)
@@ -295,8 +297,8 @@ if args.predict:
 
 #from keras import losses
 
-mynet = custom_unet((256,256,1))
-#mynet = load_model("/home/will/projects/legoproj/nets/tstgeom_pole_bayes.h5",compile=False)
+#mynet = custom_unet((256,256,1))
+mynet = load_model("/home/will/projects/legoproj/nets/tstgeom_poleeng_bayes_fr.h5",compile=False)
 
 #mynet.compile(optimizer=RMSprop(lr=4e-4), loss=geom_loss)
 mynet.compile(optimizer=RMSprop(lr=4e-4), loss=geom_loss_bayes)
