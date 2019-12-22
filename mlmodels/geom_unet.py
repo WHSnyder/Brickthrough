@@ -113,16 +113,8 @@ def custom_unet(
         x = concatenate([x, conv])
         x = conv2d_block(inputs=x, filters=filters, use_batch_norm=use_batch_norm, dropout=dropout, padding=p,activation="relu")
 
-    #outputs = Conv2D(3, (3,3), activation="tanh", padding=p) (x)
     geom_output = Conv2D(4, (3,3), activation="tanh", padding=p) (x)
-    #error_output = Conv2D(1, (3,3), activation="sigmoid", padding=p)(x)
 
-    #outputs = concatenate([geom_output,error_output])
-
-    #print("Output shape:\n\n")
-    #print(outputs)
-    #print(K.int_shape(outputs))
-    
     model = Model(inputs=[inputs], outputs=[geom_output])
 
     return model
@@ -167,7 +159,7 @@ def geom_loss_bayes(y_true, y_pred):
 
     geom_diffs_mean = tf.reduce_mean(geom_diffs_raw,axis=-1,name="diffs_mean")
     error_pred_loss = tf.math.abs(geom_diffs_mean - error_out, name="maybe")
-    error_pred_loss = tf.reduce_sum(((.1 * negmask) + 5*posmask) * error_pred_loss)
+    error_pred_loss = tf.reduce_sum(((.1 * negmask) + posmask) * error_pred_loss)
 
     return geom_diffs_sum + error_pred_loss
 
@@ -244,11 +236,11 @@ if args.predict:
             img = cv2.imread("/home/will/Downloads/ontable.jpeg",0)
         else:
             tag = "{:0>4}".format(num)
-            img = cv2.imread("/home/will/projects/legoproj/data/kpts_dset_{}/{}_a.png".format(6,tag),0)
+            img = cv2.imread("/home/will/projects/legoproj/data/kpts_dset_{}/{}_a.png".format(5,tag),0)
         
         img = cv2.resize(img,(256,256),interpolation=cv2.INTER_LINEAR)
 
-        geomraw = cv2.imread("/home/will/projects/legoproj/data/kpts_dset_{}/geom/{}_geom.png".format(6,tag))
+        geomraw = cv2.imread("/home/will/projects/legoproj/data/kpts_dset_{}/geom/{}_geom.png".format(5,tag))
         
         geom = cv2.cvtColor(geomraw,cv2.COLOR_BGR2GRAY)
         geom = cv2.inRange(geom,2,255)
@@ -295,20 +287,13 @@ if args.predict:
 
 
 
-#from keras import losses
-
 #mynet = custom_unet((256,256,1))
-mynet = load_model("/home/will/projects/legoproj/nets/tstgeom_poleeng_bayes_fr.h5",compile=False)
+mynet = load_model("/home/will/projects/legoproj/nets/conservative_bayes.h5", compile=False)
 
-#mynet.compile(optimizer=RMSprop(lr=4e-4), loss=geom_loss)
 mynet.compile(optimizer=RMSprop(lr=4e-4), loss=geom_loss_bayes)
 
 train_gen = GeomGenerator(False)
 val_gen = GeomGenerator(True)
-
-#print(mynet.summary())
-
-#sys.exit()
 
 
 history = mynet.fit_generator(generator=train_gen,
@@ -319,7 +304,7 @@ history = mynet.fit_generator(generator=train_gen,
                     workers=6,
                     epochs=20)
 
-mynet.save("/home/will/projects/legoproj/nets/tstgeom_poleeng_bayes_fr.h5")
+mynet.save("/home/will/projects/legoproj/nets/conservative_bayes.h5")
 
 print(history.history['loss'])
 # "Loss"

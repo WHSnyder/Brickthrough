@@ -276,8 +276,8 @@ def separate(mask):
         threshed = cv2.medianBlur(threshed.astype(np.uint8), 3)
         threshed = cv2.dilate(threshed, kernel, iterations=1)
 
-        #if np.sum(threshed) <= 255*100:
-            #continue;
+        if np.sum(threshed) <= 255*100:
+            continue;
 
         maskdict[hue] = threshed
 
