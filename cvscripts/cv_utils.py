@@ -257,3 +257,28 @@ def getStuddedSurface(img, show=False):
     return outimg,outlist
 
 
+def separate(mask):
+    
+    kernel = np.ones((2,2), np.uint8) 
+    maskdict = {}
+
+    hsvmask = cv2.cvtColor(mask,cv2.COLOR_BGR2HSV)
+    hist = cv2.calcHist([hsvmask],[0],None,[180],[0,179])
+    
+    hues=[]
+    for j,e in enumerate(hist):
+        if e[0] > 100:
+            hues.append(j)
+
+    for hue in hues:
+
+        threshed = cv2.inRange(hsvmask, (hue-1,2,100), (hue+1,255,255))
+        threshed = cv2.medianBlur(threshed.astype(np.uint8), 3)
+        threshed = cv2.dilate(threshed, kernel, iterations=1)
+
+        #if np.sum(threshed) <= 255*100:
+            #continue;
+
+        maskdict[hue] = threshed
+
+    return maskdict

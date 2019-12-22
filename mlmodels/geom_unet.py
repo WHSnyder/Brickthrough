@@ -167,7 +167,7 @@ def geom_loss_bayes(y_true, y_pred):
 
     geom_diffs_mean = tf.reduce_mean(geom_diffs_raw,axis=-1,name="diffs_mean")
     error_pred_loss = tf.math.abs(geom_diffs_mean - error_out, name="maybe")
-    error_pred_loss = tf.reduce_sum(((.1 * negmask) + posmask) * error_pred_loss)
+    error_pred_loss = tf.reduce_sum(((.1 * negmask) + 5*posmask) * error_pred_loss)
 
     return geom_diffs_sum + error_pred_loss
 
