@@ -8,7 +8,7 @@ import mathutils as mu
 import os
 from math import degrees
 
-write_path = "/Users/will/projects/legoproj/utils/calib_data/"
+write_path = "/home/will/projects/legoproj/cvscripts/calib_data/"
 
 objdata = {}
 
