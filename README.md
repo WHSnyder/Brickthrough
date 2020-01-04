@@ -37,13 +37,17 @@ Far too many to list here when it comes to my lack of general CV/DL experience a
 
 ## Future directions
 
+* Perfecting Stage 2
+
 * After spending most of October surveying papers on SotA pose estimation algorithms/networks I figured estimating explicit 2D-3D correspondence would be the most realistic approach.  Fully deep-learned pose estimation pipelines such as <a href="https://github.com/dineshreddy91/Occlusion_Net">OcclusionNet</a> or <a href="https://github.com/yuxng/PoseCNN">PoseCNN</a> were far too bulky/confusing to work with and lighter networks such as KeypointNet didn't seem robust enough to heavy occlusion/textureless surfaces.  In the near future I would love to experiment with estimating dense correspondence with some kind of hierarchical FCN approach or a graph-based model as seen in OcclusionNet.  
 
 * Multi-view approaches
 
 * Exploring structure-from-motion techniques and integration with deep learning strategies. 
 
-* A reinforcement learning guess-rerender-refine approach to pose estimation or an iterative model as in this <a href="https://arxiv.org/pdf/1507.06550.pdf">human pose estimation method.</a>   
+* A reinforcement learning guess-rerender-refine approach to pose estimation or an iterative model as in this <a href="https://arxiv.org/pdf/1507.06550.pdf">human pose estimation method.</a> 
+
+* An approach requiring a network to learn a general voxelization for the combination presented.  The network would be trained to estimate each piece's rotation and translation in terms of another piece's voxelization-derived coordinate system.  Perhaps an convolutional encoder-decoder + recurrent architecture similar to that of image captioning networks could work in such a system. 
 
 * I don't have any formal training or coursework in machine learning for computer vision so I could be wrong, but from my research it seems like a fully deep-learned pipeline encompassing all 3 stages would be impractical.  The need for fuzzy logic followed by structured 3D reasoning suggests a very convoluted design and painful design iteration times.  Pieces can be completely unique or could have modular similarity to one another ie: 2 2x2 bricks make a 4x2 brick.  Trying to train a network to accommodate these fundemental structural differences seems wrong... 
 
