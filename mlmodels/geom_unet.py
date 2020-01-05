@@ -183,7 +183,7 @@ def geom_loss_bayes_simpler(y_true, y_pred):
 
 
 
-def vizWithError(input_img,pred,true_geom):
+def vizWithError(input_img,pred,true_geom=np.zeros((4,4),dtype=np.uint8)):
 
     pred = (255.0 * np.reshape((1.0+pred)/2.0, (256,256,4))).astype(np.uint8)
 
@@ -194,11 +194,16 @@ def vizWithError(input_img,pred,true_geom):
     outimg = cv2.resize(geom_pred, (512,512), cv2.INTER_LINEAR)
     true_geom = cv2.resize(true_geom, (512,512), cv2.INTER_LINEAR)
 
-    cv2.imshow("input",input_img)
-    cv2.waitKey(0)
 
-    cv2.imshow("out",outimg)
-    cv2.waitKey(0)
+    rows = 2
+    cols = 2
+    fig=plt.figure(figsize=(8, 8))
+    
+    fig.add_subplot(rows, cols, 1)
+    plt.imshow(input_img)
+
+    fig.add_subplot(rows, cols, 2)
+    plt.imshow(outimg)
 
     geommask = cv2.cvtColor(true_geom,cv2.COLOR_BGR2GRAY)
     geommask = cv2.inRange(geommask,2,255)
@@ -208,13 +213,34 @@ def vizWithError(input_img,pred,true_geom):
     outimg = outimg.astype(np.float32)
     diffs = np.absolute( geomraw - outimg ).astype(np.uint8)
 
-    cv2.imshow("diffs",diffs)
-    cv2.waitKey(0)
+    fig.add_subplot(rows, cols, 3)
+    plt.imshow(diffs)
 
     error_pred = cv2.resize(error_pred,(512,512),cv2.INTER_LINEAR)
+
+    fig.add_subplot(rows, cols, 4)
+    plt.imshow(error_pred)
+
+    plt.show()
+
+
+
+
+    # cv2.imshow("input",input_img)
+    # cv2.waitKey(0)
+
+    # cv2.imshow("out",outimg)
+    # cv2.waitKey(0)
+
+
+
+    #cv2.imshow("diffs",diffs)
+    #cv2.waitKey(0)
+
+    #error_pred = cv2.resize(error_pred,(512,512),cv2.INTER_LINEAR)
     #error_pred = cv2.bitwise_and(error_pred,error_pred,mask=geommask)
-    cv2.imshow("error est",error_pred)
-    cv2.waitKey(0)
+    #cv2.imshow("error est",error_pred)
+    #cv2.waitKey(0)
 
 
 
@@ -234,20 +260,19 @@ if args.predict:
 
         if num == "t":
             img = cv2.imread("/home/will/Downloads/ontable.jpeg",0)
+            geomraw = np.zeros((4,4,3),dtype=np.uint8)
         else:
             tag = "{:0>4}".format(num)
             img = cv2.imread("/home/will/projects/legoproj/data/kpts_dset_{}/{}_a.png".format(5,tag),0)
-        
+            geomraw = cv2.imread("/home/will/projects/legoproj/data/kpts_dset_{}/geom/{}_geom.png".format(5,tag))
+
         img = cv2.resize(img,(256,256),interpolation=cv2.INTER_LINEAR)
-
-        geomraw = cv2.imread("/home/will/projects/legoproj/data/kpts_dset_{}/geom/{}_geom.png".format(5,tag))
         
-        geom = cv2.cvtColor(geomraw,cv2.COLOR_BGR2GRAY)
-        geom = cv2.inRange(geom,2,255)
-        geom = cv2.resize(geom,(512,512),interpolation=cv2.INTER_LINEAR)
+        #geom = cv2.cvtColor(geomraw,cv2.COLOR_BGR2GRAY)
+        #geom = cv2.inRange(geom,2,255)
+        #geom = cv2.resize(geom,(512,512),interpolation=cv2.INTER_LINEAR)
 
-        geomraw1 = cv2.resize(geomraw,(512,512),interpolation=cv2.INTER_LINEAR)
-
+        #geomraw1 = cv2.resize(geomraw,(512,512),interpolation=cv2.INTER_LINEAR)
 
         pred = model.predict( np.reshape(img, (1,256,256,1)).astype('float32')/255.0 )
         vizWithError(img,pred,geomraw)
