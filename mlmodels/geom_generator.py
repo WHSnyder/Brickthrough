@@ -54,7 +54,7 @@ class GeomGenerator(keras.utils.Sequence):
             #i1 = random.randint(0,2)
             #i2 = random.randint(0,self.numdict[i1])
 
-            i1 = random.randint(3,6)
+            i1 = random.randint(0,6)
 
             if self.val:
                 i2 = random.randint(180,199)
@@ -64,7 +64,7 @@ class GeomGenerator(keras.utils.Sequence):
             tag = "{:0>4}".format(i2)
 
             imgpath = (self.path + "{}_a.png").format(i1,tag)
-            geompath = (self.path + "geom/" + "{}_geom.png").format(i1,tag) 
+            geompath = (self.path + "geom/" + "{}_geom_wing.png").format(i1,tag) 
 
             img = cv2.imread(imgpath,0)
             img = cv2.resize(img,(256,256),interpolation=cv2.INTER_LINEAR)

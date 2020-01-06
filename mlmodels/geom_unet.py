@@ -75,9 +75,9 @@ def custom_unet(
     use_batch_norm=True, 
     upsample_mode='deconv', # 'deconv' or 'simple' 
     use_dropout_on_upsampling=True, 
-    dropout=0.3, 
+    dropout=0.2, 
     dropout_change_per_layer=0.03,
-    filters=64,
+    filters=32,
     num_layers=5,
     output_activation='relu'): # 'sigmoid' or 'softmax'
     
@@ -94,11 +94,12 @@ def custom_unet(
 
     down_layers = []
     for l in range(num_layers):
+
         x = conv2d_block(inputs=x, filters=filters, use_batch_norm=use_batch_norm, dropout=dropout, padding=p)
         down_layers.append(x)
         x = MaxPooling2D((2, 2),padding=p) (x)
         dropout += dropout_change_per_layer
-        #filters*2 # double the number of filters with each layer
+        filters = int(filters*1.5) # double the number of filters with each layer
 
     x = conv2d_block(inputs=x, dila=1, filters=filters, use_batch_norm=use_batch_norm, dropout=dropout,padding=p)
 
@@ -107,7 +108,7 @@ def custom_unet(
         dropout_change_per_layer = 0.0
 
     for conv in reversed(down_layers):        
-        #//= 2  decreasing number of filters with each layer 
+        filters = int(filters/1.5) #//= 2  decreasing number of filters with each layer 
         dropout -= dropout_change_per_layer
         x = upsample(filters, (2, 2), strides=(2, 2),padding=p) (x)
         x = concatenate([x, conv])
@@ -159,9 +160,9 @@ def geom_loss_bayes(y_true, y_pred):
 
     geom_diffs_mean = tf.reduce_mean(geom_diffs_raw,axis=-1,name="diffs_mean")
     error_pred_loss = tf.math.abs(geom_diffs_mean - error_out, name="maybe")
-    error_pred_loss = tf.reduce_sum(((.1 * negmask) + posmask) * error_pred_loss)
+    error_pred_loss = tf.reduce_sum(((.01 * negmask) + posmask) * error_pred_loss)
 
-    return geom_diffs_sum + error_pred_loss
+    return geom_diffs_sum #+ error_pred_loss
 
 
 
@@ -252,7 +253,8 @@ def vizWithError(input_img,pred,true_geom=np.zeros((4,4),dtype=np.uint8)):
 
 if args.predict:
 
-    model = load_model("/home/will/projects/legoproj/nets/tstgeom_poleeng_bayes_fr.h5",compile=False)
+    #model = load_model("/home/will/projects/legoproj/nets/tstgeom_poleengcockpit_bayes_constfilt.h5",compile=False)
+    model = load_model("/home/will/projects/legoproj/nets/tst_trueu_bayes_wing.h5",compile=False)
 
     while input("Predict?: ") != 'q':
 
@@ -264,7 +266,7 @@ if args.predict:
         else:
             tag = "{:0>4}".format(num)
             img = cv2.imread("/home/will/projects/legoproj/data/kpts_dset_{}/{}_a.png".format(5,tag),0)
-            geomraw = cv2.imread("/home/will/projects/legoproj/data/kpts_dset_{}/geom/{}_geom.png".format(5,tag))
+            geomraw = cv2.imread("/home/will/projects/legoproj/data/kpts_dset_{}/geom/{}_geom_wing.png".format(5,tag))
 
         img = cv2.resize(img,(256,256),interpolation=cv2.INTER_LINEAR)
         
@@ -313,7 +315,9 @@ if args.predict:
 
 
 #mynet = custom_unet((256,256,1))
-mynet = load_model("/home/will/projects/legoproj/nets/conservative_bayes.h5", compile=False)
+
+mynet = load_model("/home/will/projects/legoproj/nets/tst_trueu_bayes_wing.h5", compile=False)
+#mynet = load_model("/home/will/projects/legoproj/nets/tst_heavy_bayes.h5", compile=False)
 
 mynet.compile(optimizer=RMSprop(lr=4e-4), loss=geom_loss_bayes)
 
@@ -327,9 +331,9 @@ history = mynet.fit_generator(generator=train_gen,
                     validation_steps=20,
                     use_multiprocessing=False,
                     workers=6,
-                    epochs=20)
+                    epochs=15)
 
-mynet.save("/home/will/projects/legoproj/nets/conservative_bayes.h5")
+mynet.save("/home/will/projects/legoproj/nets/tst_trueu_bayes_wing.h5")
 
 print(history.history['loss'])
 # "Loss"
