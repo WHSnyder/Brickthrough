@@ -4,5 +4,5 @@ unet/**
 data/**
 .ipynb_checkpoints/**
 __pycache__/
-.ipynb_checkpoints/
-*checkpoint*
+**/.ipynb_checkpoints/
+**/*checkpoint*
