@@ -248,7 +248,7 @@ if args.predict:
 
         img = cv2.resize(img,(256,256),interpolation=cv2.INTER_LINEAR)
         
-        #geom = cv2.cvtColor(geomraw,cv2.COLOR_BGR`2GRAY)
+        #geom = cv2.cvtColor(geomraw,cv2.COLOR_BGR2GRAY)
         #geom = cv2.inRange(geom,2,255)
         #geom = cv2.resize(geom,(512,512),interpolation=cv2.INTER_LINEAR)
 
