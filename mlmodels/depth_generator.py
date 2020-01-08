@@ -3,10 +3,10 @@ import keras
 import random
 import cv2
 
-class GeomGenerator(keras.utils.Sequence):
+class DepthGenerator(keras.utils.Sequence):
 
     #'Generates data for Keras'
-    def __init__(self, val, batch_size=6, dim=(32,32,32), n_channels=1,
+    def __init__(self, val, batch_size=8, dim=(32,32,32), n_channels=1,
                  n_classes=10, shuffle=True):
         #'Initialization'
         self.dim = dim
@@ -64,20 +64,27 @@ class GeomGenerator(keras.utils.Sequence):
             tag = "{:0>4}".format(i2)
 
             imgpath = (self.path + "{}_a.png").format(i1,tag)
-            geompath = (self.path + "geom/" + "{}_geom.png").format(i1,tag) 
+            depthpath = (self.path + "{}_npdepth.npy").format(i1,tag) 
+            maskpath = (self.path + "{}_masks.png").format(i1,tag)
 
             img = cv2.imread(imgpath,0)
             img = cv2.resize(img,(256,256),interpolation=cv2.INTER_LINEAR)
             img = np.reshape(img,(256,256,1))
 
-            geom = cv2.imread(geompath)
-            dummy = np.zeros((256,256,1),dtype="uint8")
-            geom = np.concatenate((geom,dummy),axis=-1)
+            mask = cv2.resize(cv2.imread(maskpath,0), (256,256), interpolation=cv2.INTER_LINEAR)
+            mask = np.reshape(mask,(256,256,1)).astype(np.float32)
+
+            d = np.load(depthpath,allow_pickle=False)
+            d = np.reshape(d,(512,512,1)).astype(np.float32)
+            depth = d[0::2,0::2]
+            depth[depth > 9999.0] = 0.0
+
+            depth = np.concatenate((depth,mask),axis=-1)
             
             x.append(img)
-            y.append(geom)
+            y.append(depth)
 
         x = np.array(x).astype('float32')/255.0
-        y = np.array(y).astype('float32')/255.0
+        y = np.array(y).astype('float32')
 
         return x,y

@@ -23,12 +23,13 @@ Far too many to list here when it comes to my lack of general CV/DL experience a
 
 * Second stage
 
-	* Bad masks from stage 1 often make this stage hopeless.
-	* Two Unets produce highlights for studs and explicit keypoints on each piece.
+	*  For tracking purposes, a tiny Unet produces highlights for studs present in the image.  This is useful for tracking purposes, since neighboring studs can be plugged into a RANSAC solver for camera localization.
 
 	![alt text](./repo_images/prediction.png "studsreal")
 
-	* More coming soon... 
+	*  A larger Unet generates local geometry mappings for the pieces present in the image.  These local coordinates are plugged into OpenCV's RANSAC solver.  This method works reliably for most pieces with distinct features, but fails more often with flat, uniformly studded pieces like wings.  Fine tuning this network while trying to expand piece coverage is tricky.  It's very likely that it'll be used to refine pointclouds from world space to Lego voxels instead of directly estimating pose in future iterations.  Not to mention, it cannot handle heavily occluded bricks, something I was hoping it would magically accomplish.
+
+	![alt text](./repo_images/geompreds.gif "geompreds")
 
 * Third stage 
 
