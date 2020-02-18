@@ -1,6 +1,6 @@
 #  Deep-Learned Lego Perception Pipeline
 
-A three stage mess of a project for generating 3D models of Lego combinations from images.  The first stage uses a retrained Mask R-CNN model to extract 
+A three stage pipeline for generating 3D models of Lego combinations from images.  The first stage uses a retrained Mask R-CNN model to extract 
 masks for each piece in the image. The second stage uses known 2D-3D correspondences with a pnp solver (OpenCV) to estimate poses for each piece.  The third stage refines the pose estimates.  
 
 The particular use case I had in mind was building some kind of simple fighter craft and flying the generated 3D model ingame.  The four pieces this primitve version uses are various x by x bricks, left-right versions of a basic wing piece, an engine type piece, and a pole for weapons.
@@ -23,7 +23,7 @@ Far too many to list here when it comes to my lack of general CV/DL experience a
 
 * Second stage
 
-	*  For tracking purposes, a tiny Unet produces highlights for studs present in the image.  This is useful for tracking purposes, since neighboring studs can be plugged into a RANSAC solver for camera localization.
+	*  For tracking purposes, a tiny Unet produces highlights for studs present in the image.  This is useful since neighboring studs can be plugged into a RANSAC solver for camera localization.
 
 	![alt text](./repo_images/prediction.png "studsreal")
 
