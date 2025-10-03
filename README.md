@@ -1,16 +1,25 @@
-#  Deep-Learned Lego Perception Pipeline
+#  Computer vision for Lego comprehension
 
-A three stage pipeline for generating 3D models of Lego combinations from images.  The first stage uses a retrained Mask R-CNN model to extract 
-masks for each piece in the image. The second stage uses known 2D-3D correspondences with a pnp solver (OpenCV) to estimate poses for each piece.  The third stage refines the pose estimates.  
+## Goal 
 
-The particular use case I had in mind was building some kind of simple fighter craft and flying the generated 3D model ingame.  The four pieces this primitve version uses are various x by x bricks, left-right versions of a basic wing piece, an engine type piece, and a pole for weapons.
+Create a computer vision system could take as input a single image of some Lego structure and produce as output a 3D model of it.  The output 3D model must consist of the exact arrangement of pieces, not an approximated voxelization of bricks.  
 
-See this <a href="https://github.com/WHSnyder/LegoTrainingRenderer">repo</a> for training data details...
+## Architecture
+
+Being new to machine learning, I figured I'd just start by transfer learning with MaskRCNN to identify the pieces in the image and then use traditional CV approaches to estimate poses for each separated piece.  That was simple enough and allowed me to get a better footing in these domains.  I then tried looking into other architectures involving more advanced neural networks to handle more of the process, but had trouble narrowing down the right approach.
+
+## Data
+
+The <a href="https://github.com/WHSnyder/LegoTrainingRenderer">approach for training data</a> was to create a Blender scene with 3D models of the relevant pieces, randomly arrange them into different structures, and render each arrangement to an image, alongside relevant metadata like masks and 3D coordinates. 
+
+## Constraints
+
+Being new to this and lacking a powerful GPU, I decided to restrict the problem space a little bit by using only 4-5, very distinct, Lego pieces in the data.  Covering *all Lego pieces* is not feasible for me.  The training images were also rendered with rather low quality for more throughput.
 
 
-## Stages and their challenges
+# Challenges
 
-Far too many to list here when it comes to my lack of general CV/DL experience and trouble digesting research papers... 
+I was probably in too deep on this whole project and should've added more constraints before getting into this.
 
 * First stage  
 
@@ -36,20 +45,12 @@ Far too many to list here when it comes to my lack of general CV/DL experience a
 	* Studs and insets are brute-force matched with one another to find likely fits between nearby pieces. A lazy solution that works well enough for now.
 
 
-## Future directions
+# Future directions
 
-* Perfecting Stage 2
-
-* After spending most of October surveying papers on SotA pose estimation algorithms/networks I figured estimating explicit 2D-3D correspondence would be the most realistic approach.  Fully deep-learned pose estimation pipelines such as <a href="https://github.com/dineshreddy91/Occlusion_Net">OcclusionNet</a> or <a href="https://github.com/yuxng/PoseCNN">PoseCNN</a> were far too bulky/confusing to work with and lighter networks such as KeypointNet didn't seem robust enough to heavy occlusion/textureless surfaces.  In the near future I would love to experiment with estimating dense correspondence with some kind of hierarchical FCN approach or a graph-based model as seen in OcclusionNet.  
+* Full pose estimation networks such as <a href="https://github.com/dineshreddy91/Occlusion_Net">OcclusionNet</a> or <a href="https://github.com/yuxng/PoseCNN">PoseCNN</a>  
 
 * Multi-view approaches
 
-* Exploring structure-from-motion techniques and integration with deep learning strategies. 
-
 * A reinforcement learning guess-rerender-refine approach to pose estimation or an iterative model as in this <a href="https://arxiv.org/pdf/1507.06550.pdf">human pose estimation method.</a> 
 
-* An approach requiring a network to learn a general voxelization for the combination presented.  The network would be trained to estimate each piece's rotation and translation in terms of another piece's voxelization-derived coordinate system.  Perhaps an convolutional encoder-decoder + recurrent architecture similar to that of image captioning networks could work in such a system. 
-
-* I don't have any formal training or coursework in machine learning for computer vision so I could be wrong, but from my research it seems like a fully deep-learned pipeline encompassing all 3 stages would be impractical.  The need for fuzzy logic followed by structured 3D reasoning suggests a very convoluted design and painful design iteration times.  Pieces can be completely unique or could have modular similarity to one another ie: 2 2x2 bricks make a 4x2 brick.  Trying to train a network to accommodate these fundemental structural differences seems wrong... 
-
-* Learning about deep learning more deeply.
+* Training a network to estimate a voxelization and applying a sort-of '3D Mask-RCNN' model on that voxelization.
